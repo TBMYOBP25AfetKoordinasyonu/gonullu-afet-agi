@@ -1,0 +1,1 @@
+# gonullu-afet-agi
