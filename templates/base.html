@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="tr">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>{% block title %}Afet Koordinasyon Sistemi{% endblock %}</title>
+    <link
+      rel="stylesheet"
+      href="{{ url_for('static', filename='base.css') }}"
+    />
+    {% block extra_css %}{% endblock %}
+  </head>
+  <body>
+    <header>
+      <h1>Gönüllü Afet Koordinasyon Sistemi</h1>
+      <nav>
+        <a href="/" class="btn">Ana Sayfa</a>
+        <a href="/help" class="btn">Yardım Talep Et</a>
+        <a href="/sign-in" class="btn">Giriş Yap</a>
+        <a href="/sign-up" class="btn">Kayıt Ol</a>
+      </nav>
+    </header>
+    <div class="container">
+      <main>
+        {% block content %}
+        <!-- Her sayfaya özel içerik buraya gelecek -->
+        {% endblock %}
+      </main>
+
+      <footer>
+        <p style="text-align: center; margin-top: 20px; color: #666">
+          © 2025 Afet Koordinasyon Sistemi
+        </p>
+      </footer>
+    </div>
+  </body>
+</html>
+

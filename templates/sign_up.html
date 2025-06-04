@@ -1,0 +1,26 @@
+{% extends "base.html" %}
+
+{% block title %}Kayıt Ol{% endblock %}
+
+{% block content %}
+  <h2>Yeni Kullanıcı Kaydı</h2>
+  <form method="post" class="form">
+    <label for="fullname">Ad Soyad:</label>
+    <input type="text" id="fullname" name="fullname" required />
+    
+    <label for="email">E-posta:</label>
+    <input type="email" id="email" name="email" required placeholder="example@mail.com" />
+    
+    <label for="password">Şifre:</label>
+    <input type="password" id="password" name="password" required />
+    
+    <label for="role">Rol:</label>
+    <select id="role" name="role" required>
+      <option value="volunteer">Gönüllü</option>
+      <option value="coordinator">Koordinatör</option>
+    </select>
+    
+    <button type="submit" class="btn">Kaydol</button>
+  </form>
+  <a href="/sign-in" class="link">Already have an account? Sign in</a>
+{% endblock %}

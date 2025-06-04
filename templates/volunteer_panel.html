@@ -1,0 +1,15 @@
+
+{% extends "base.html" %}
+{% block extra_css %}<link rel="stylesheet" href="{{ url_for('static', filename='volunteer_panel.css') }}">{% endblock %}
+
+{% block title %}Gönüllü Paneli{% endblock %}
+
+{% block content %}
+  <h2>Yakınımdaki Yardım Talepleri</h2>
+  {% if requests %}
+  <!--Gönüllü, Bu panelde Harita üzerinde kendisine en yakın afetzedelerin konumunu görcek  -->
+  
+  {% else %}
+    <p>Atanacak yardım talebi bulunmamaktadır.</p>
+  {% endif %}
+{% endblock %}

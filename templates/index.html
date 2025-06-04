@@ -1,0 +1,19 @@
+{% extends "base.html" %}
+
+{% block title %}Ana Sayfa - Afet Koordinasyon Sistemi{% endblock %}
+
+{% block content %}
+  
+  <h2>Bu sistem, afet durumlarında yardıma ihtiyaç duyan afetzedeler ile gönüllü yardım sağlayıcıları arasında köprü kurar.</h2>
+ 
+  <!-- Ana Sayfa da sadece afetzedeler ve gönüllüler için genel bilgi ve yönlendirmeler olacak. -->
+  <div class="info-section">
+    <h3>Afetzedeler İçin</h3>
+    <p>Acil Yardım talep etmek için lütfen <a href="/help" class="link">buraya tıklayın</a>.</p>
+    <p>Yardım talepleriniz, koordinatörler tarafından incelenecek ve en kısa sürede size ulaşılacaktır.</p>
+    <h3>Gönüllüler İçin</h3>
+    <p>Yardım taleplerini görüntülemek ve gönüllü olarak görev almak için lütfen <a href="/sign-in" class="link">giriş yapın</a>.</p>
+    <p>Gönüllü olarak, yakınınızdaki afetzedelere yardım edebilir, onların ihtiyaçlarını karşılayabilirsiniz.</p>
+  </div>
+
+{% endblock %}

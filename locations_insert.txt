@@ -1,0 +1,9 @@
+// şimdilik kalsın, konumları veritabanına ekleyen script olacak.
+        with open('locations_insert.sql', 'r', encoding='utf-8') as file:
+            load_locations_s_q_l = file.read()
+
+        c.executescript(load_locations_s_q_l)
+
+('Ankara', 'Çankaya', 'Kızılay Meydanı', '06420', 39.92077, 32.85411),
+('İstanbul', 'Beşiktaş', 'Beşiktaş Meydanı', '34353', 41.04354, 29.00498),
+('İzmir', 'Konak', 'Konak Meydanı', '35250', 38.41922, 27.12872)

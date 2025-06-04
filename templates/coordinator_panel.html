@@ -1,0 +1,27 @@
+
+{% extends "base.html" %}
+{% block extra_css %}<link rel="stylesheet" href="{{ url_for('static', filename='coordinator_panel.css') }}">{% endblock %}
+
+{% block title %}Koordinatör Paneli{% endblock %}
+
+{% block content %}
+  <h2>Tüm Yardım Talepleri</h2>
+  <form method="post" class="form">
+    {% for row in data %}
+      <div class="request-item">
+        <p>
+          Talep ID: {{ row[0] }} - Konum: ({{ row[1] }}, {{ row[2] }}) - Durum: {{ row[3] }} - 
+          Gönüllü: {{ row[4] or 'Atanmamış' }}
+        </p>
+        <label for="status_{{ row[0] }}">Durumu Değiştir:</label>
+        <select id="status_{{ row[0] }}" name="status_{{ row[0] }}">
+          <option value="pending" {% if row[3]=='pending' %}selected{% endif %}>Beklemede</option>
+          <option value="assigned" {% if row[3]=='assigned' %}selected{% endif %}>Atandı</option>
+          <option value="completed" {% if row[3]=='completed' %}selected{% endif %}>Tamamlandı</option>
+        </select>
+      </div>
+    {% endfor %}
+    <button type="submit" class="btn">Güncelle</button>
+  </form>
+  <a href="/" class="link">Ana Sayfaya Dön</a>
+{% endblock %}
