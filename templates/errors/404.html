@@ -1,0 +1,14 @@
+{% extends "base.html" %}
+
+{% block title %}Sayfa Bulunamadı{% endblock %}
+
+{% block content %}
+<div class="error-container">
+    <h1>404 - Sayfa Bulunamadı</h1>
+    <p>Aradığınız sayfa bulunamadı veya taşınmış olabilir.</p>
+    <div class="error-actions">
+        <a href="{{ url_for('index') }}" class="btn">Ana Sayfaya Dön</a>
+        <a href="{{ url_for('help_request') }}" class="btn">Yardım Talep Et</a>
+    </div>
+</div>
+{% endblock %} 

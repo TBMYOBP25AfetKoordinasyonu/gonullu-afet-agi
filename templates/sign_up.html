@@ -1,0 +1,93 @@
+{% extends "base.html" %}
+
+{% block title %}Kayıt Ol{% endblock %}
+
+{% block content %}
+<div class="form-container">
+    <h2>Kayıt Ol</h2>    <form method="post" class="form" autocomplete="on">
+        
+        <div class="form-group">
+            <label for="fullname">{{ form.fullname.label }}</label>
+            {{ form.fullname(class="form-control", placeholder="Ad Soyad", autocomplete="name") }}
+            {% if form.fullname.errors %}
+                {% for error in form.fullname.errors %}
+                    <div class="error">{{ error }}</div>
+                {% endfor %}
+            {% endif %}
+        </div>
+
+        <div class="form-group">
+            <label for="username">{{ form.username.label }}</label>
+            {{ form.username(class="form-control", placeholder="Kullanıcı adı", autocomplete="username") }}
+            {% if form.username.errors %}
+                {% for error in form.username.errors %}
+                    <div class="error">{{ error }}</div>
+                {% endfor %}
+            {% endif %}
+            <div class="form-text">Kullanıcı adı sadece harf, rakam ve alt çizgi içerebilir.</div>
+        </div>
+
+        <div class="form-group">
+            <label for="email">{{ form.email.label }}</label>
+            {{ form.email(class="form-control", placeholder="example@mail.com", autocomplete="email") }}
+            {% if form.email.errors %}
+                {% for error in form.email.errors %}
+                    <div class="error">{{ error }}</div>
+                {% endfor %}
+            {% endif %}
+        </div>
+
+        <div class="form-group">
+            <label for="phone">{{ form.phone.label }}</label>
+            {{ form.phone(class="form-control", placeholder="+90 5XX XXX XX XX", autocomplete="tel") }}
+            {% if form.phone.errors %}
+                {% for error in form.phone.errors %}
+                    <div class="error">{{ error }}</div>
+                {% endfor %}
+            {% endif %}
+            <div class="form-text">Uluslararası format kullanınız (örn: +90 5XX XXX XX XX)</div>
+        </div>
+        
+        <div class="form-group">
+            <label for="password">{{ form.password.label }}</label>
+            {{ form.password(class="form-control", autocomplete="new-password") }}
+            {% if form.password.errors %}
+                {% for error in form.password.errors %}
+                    <div class="error">{{ error }}</div>
+                {% endfor %}
+            {% endif %}
+            <div class="form-text">Şifre en az 4 karakter uzunluğunda olmalı ve en az bir harf ve bir rakam içermelidir.</div>
+        </div>
+
+        <div class="form-group">
+            <label for="role">{{ form.role.label }}</label>
+            {{ form.role(class="form-control") }}
+            {% if form.role.errors %}
+                {% for error in form.role.errors %}
+                    <div class="error">{{ error }}</div>
+                {% endfor %}
+            {% endif %}            <div class="form-text">
+                <ul>
+                    <li><strong>Gönüllü:</strong> Afet bölgelerinde yardım etmek isteyen kişiler</li>
+                    <li><strong>Afetzede:</strong> Yardıma ihtiyacı olan kişiler</li>
+                </ul>                <div class="alert alert-info mt-2">
+                    <strong>Koordinatör Olmak İstiyorsanız:</strong>
+                    <ul class="mt-2 mb-0">
+                        <li>Önce gönüllü olarak kayıt olun</li>
+                        <li>Afet anında müdahale deneyimi kazanın</li>
+                        <li>Liderlik ve organizasyon becerilerinizi gösterin</li>
+                        <li>Mevcut koordinatörler veya sistem yöneticisi ile iletişime geçin</li>
+                    </ul>
+                    <p class="mt-2 mb-0"><small>Koordinatör hesapları yönetici onayı ile açılmaktadır.</small></p>
+                </div>
+            </div>
+        </div>
+        
+        <button type="submit" class="btn btn-primary">Kayıt Ol</button>
+    </form>
+    
+    <div class="form-footer">
+        <p>Zaten hesabınız var mı? <a href="{{ url_for('sign_in') }}">Giriş Yap</a></p>
+    </div>
+</div>
+{% endblock %}

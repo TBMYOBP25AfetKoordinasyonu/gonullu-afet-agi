@@ -1,0 +1,20 @@
+{% extends "base.html" %}
+
+{% block title %}Ana Sayfa - Afet Koordinasyon Sistemi{% endblock %}
+
+{% block content %}
+<div class="container">
+    <h1>Afet Yardım Koordinasyon Platformu</h1>
+    
+    <h2>Bu sistem, afet durumlarında yardıma ihtiyaç duyan afetzedeler ile gönüllü yardım sağlayıcıları arasında köprü
+        kurmayı amaçlamaktadır.</h2>
+
+    <div class="features">
+        <h3>Afetzedeler İçin</h3>
+        <button class="btn btn-primary" onclick="window.location.href='/help'">Yardım Talep Et</button>
+
+        <h3>Gönüllüler İçin</h3>
+        <button class="btn btn-primary" onclick="window.location.href='/volunteer-panel'">Gönüllü Paneli</button>
+    </div>
+</div>
+{% endblock %}

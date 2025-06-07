@@ -1,0 +1,67 @@
+{% extends "base.html" %}
+
+{% block content %}
+<style>
+    .panel-container {
+        max-width: 1000px;
+        margin: 20px auto;
+        padding: 20px;
+    }
+    .request-card {
+        background: #f5f5f5;
+        padding: 15px;
+        margin-bottom: 15px;
+        border-radius: 5px;
+    }
+    .status-pending { color: #f39c12; }
+    .status-assigned { color: #3498db; }
+    .status-completed { color: #2ecc71; }
+    .new-request-btn {
+        display: inline-block;
+        padding: 10px 20px;
+        background: #4CAF50;
+        color: white;
+        text-decoration: none;
+        border-radius: 5px;
+        margin-bottom: 20px;
+    }
+    .new-request-btn:hover {
+        background: #45a049;
+    }
+</style>
+
+<div class="panel-container">
+    <h2>Afetzede Paneli</h2>
+    
+    <a href="{{ url_for('help_request') }}" class="new-request-btn">
+        <i class="fas fa-plus"></i> Yeni Yardım Talebi Oluştur
+    </a>
+
+    {% if help_requests %}
+        {% for request in help_requests %}
+        <div class="request-card">
+            <h3>Yardım Talebi #{{ request.id }}</h3>
+            <p><strong>Afet Türü:</strong> {{ request.disaster_type }}</p>
+            <p><strong>Durum:</strong> 
+                <span class="status-{{ request.status }}">
+                    {% if request.status == 'pending' %}
+                        Beklemede
+                    {% elif request.status == 'assigned' %}
+                        Atandı ({{ request.volunteer_count }} gönüllü)
+                    {% elif request.status == 'completed' %}
+                        Tamamlandı
+                    {% endif %}
+                </span>
+            </p>
+            <p><strong>Oluşturulma Tarihi:</strong> {{ request.created_at }}</p>
+            <p><strong>Konum:</strong> {{ request.latitude }}, {{ request.longitude }}</p>
+            {% if request.additional_info %}
+            <p><strong>Ek Bilgiler:</strong> {{ request.additional_info }}</p>
+            {% endif %}
+        </div>
+        {% endfor %}
+    {% else %}
+        <p>Henüz yardım talebiniz bulunmamaktadır.</p>
+    {% endif %}
+</div>
+{% endblock %}

@@ -1,0 +1,43 @@
+{% extends "base.html" %}
+
+{% block title %}Giriş Yap{% endblock %}
+
+{% block content %}
+<div class="form-container">
+    <h2>Giriş Yap</h2>    <form method="post" class="form" autocomplete="on">
+        <div class="form-group">
+            <label for="login">E-posta veya Kullanıcı Adı:</label>
+            <input type="text" id="login" name="login" class="form-input" placeholder="E-posta veya kullanıcı adı" autocomplete="username" required>
+            {% with messages = get_flashed_messages(with_categories=true) %}
+                {% if messages %}
+                    {% for category, message in messages %}
+                        {% if category == 'login_error' %}
+                            <div class="error">{{ message }}</div>
+                        {% endif %}
+                    {% endfor %}
+                {% endif %}
+            {% endwith %}
+        </div>
+        
+        <div class="form-group">
+            <label for="password">Şifre:</label>
+            <input type="password" id="password" name="password" class="form-input" autocomplete="current-password" required>
+            {% with messages = get_flashed_messages(with_categories=true) %}
+                {% if messages %}
+                    {% for category, message in messages %}
+                        {% if category == 'password_error' %}
+                            <div class="error">{{ message }}</div>
+                        {% endif %}
+                    {% endfor %}
+                {% endif %}
+            {% endwith %}
+        </div>
+        
+        <button type="submit" class="btn">Giriş Yap</button>
+    </form>
+    
+    <div class="form-footer">
+        <p>Hesabınız yok mu? <a href="{{ url_for('sign_up') }}">Kayıt Ol</a></p>
+    </div>
+</div>
+{% endblock %}

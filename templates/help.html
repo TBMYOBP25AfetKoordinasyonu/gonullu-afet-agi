@@ -1,0 +1,75 @@
+{% extends "base.html" %}
+{% block extra_css %}{% endblock %}
+{% block title %}Yardım Talebi{% endblock %}
+{% block content %}
+<script src="{{ url_for('static', filename='help.js') }}"></script>
+<h2>Yardım Talep Formu</h2>
+<form method="post" class="form" id="helpForm">
+    <div class="form-group">
+        <label for="disasterType">{{ form.disasterType.label }}</label>
+        {{ form.disasterType(class="form-control", id="disasterType") }}
+        {% if form.disasterType.errors %}
+        {% for error in form.disasterType.errors %}
+        <div class="error">{{ error }}</div>
+        {% endfor %}
+        {% endif %}
+    </div>
+
+    <p>Konumunuz otomatik tespit etmek için,</p>
+    <p>Lütfen <strong>"Konumumu Al"</strong> butonuna tıklayın.</p>
+
+    <div style="display: none;">
+        {{ form.lat(id="lat") }}
+        {{ form.lng(id="lng") }}
+    </div>
+    {% if form.lat.errors or form.lng.errors %}
+    <div class="error-box" style="color: red; margin: 10px 0;">
+        {% for error in form.lat.errors %}
+        <div class="error">{{ error }}</div>
+        {% endfor %}
+        {% for error in form.lng.errors %}
+        <div class="error">{{ error }}</div>
+        {% endfor %}
+    </div>
+    {% endif %}
+
+    <div class="button-group" style="margin-bottom: 10px">
+        <button type="button" class="btn" id="getLocationButton">Konumumu Al</button>
+        <button type="button" class="btn" id="manualLocationButton">Konumumu Manuel Gir</button>
+    </div>
+
+    <!-- Otomatik konum alınamazsa manuel konum girişi -->
+    <div id="manualLocation" style="display: none; margin-top: 10px">
+        <p>Otomatik konum alınamazsa, lütfen konumunuzu manuel olarak girin:</p>
+        <div class="manual-location-group">
+            <div class="form-group">
+                <label for="province">{{ form.province.label }}</label>
+                {{ form.province(class="form-control", id="province") }}
+            </div>
+            <div class="form-group">
+                <label for="district">{{ form.district.label }}</label>
+                {{ form.district(class="form-control", id="district") }}
+            </div>
+            <div class="form-group">
+                <label for="neighborhood">{{ form.neighborhood.label }}</label>
+                {{ form.neighborhood(class="form-control", id="neighborhood") }}
+            </div>
+            <div class="form-group">
+                <label for="street">{{ form.street.label }}</label>
+                {{ form.street(class="form-control", id="street") }}
+            </div>
+        </div>
+    </div>
+
+    <!-- Yardım talebi için ek bilgiler -->
+    <div class="form-group">
+        <label for="additional_info">{{ form.additional_info.label }}</label>
+        {{ form.additional_info(class="form-control", id="additional_info", rows="2",
+        placeholder="Örn: İlaç kullanıyorum, engelli vb.") }}
+    </div>
+
+    <button type="submit" class="btn" id="submitHelpRequest" style="margin-top: 15px">
+        Yardım Talebi Gönder
+    </button>
+</form>
+{% endblock %}
