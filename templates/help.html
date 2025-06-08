@@ -1,75 +1,354 @@
 {% extends "base.html" %}
-{% block extra_css %}{% endblock %}
+{% block extra_css %}
+<link rel="stylesheet" href="{{ url_for('static', filename='help.css') }}">
+<style>
+    .help-header {
+        text-align: center;
+        margin-bottom: 30px;
+    }
+
+    .help-header h2 {
+        color: #2c3e50;
+        font-size: 2.2em;
+        margin-bottom: 10px;
+        font-weight: 700;
+    }
+
+    .help-header p {
+        color: #7f8c8d;
+        font-size: 1.1em;
+        margin: 0;
+    }
+
+    .emergency-icon {
+        font-size: 3em;
+        color: #e74c3c;
+        margin-bottom: 15px;
+        animation: pulse 2s infinite;
+    }
+
+    @keyframes pulse {
+        0% { transform: scale(1); }
+        50% { transform: scale(1.1); }
+        100% { transform: scale(1); }
+    }
+
+    .alert {
+        border-radius: 15px;
+        padding: 20px;
+        margin-bottom: 25px;
+        border: none;
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+    }
+
+    .alert-warning {
+        background: linear-gradient(135deg, #ffecd2 0%, #fcb69f 100%);
+        color: #d68910;
+    }
+
+    .alert h4 {
+        font-size: 1.3em;
+        margin-bottom: 10px;
+        font-weight: 600;
+    }
+
+    .form-group {
+        margin-bottom: 25px;
+    }
+
+    .form-group label {
+        display: block;
+        margin-bottom: 8px;
+        font-weight: 600;
+        color: #2c3e50;
+        font-size: 1em;
+    }
+
+    .form-control {
+        width: 100%;
+        padding: 15px;
+        border: 2px solid #ecf0f1;
+        border-radius: 12px;
+        font-size: 1em;
+        transition: all 0.3s ease;
+        background: #f8f9fa;
+    }
+
+    .form-control:focus {
+        outline: none;
+        border-color: #3498db;
+        background: white;
+        box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.1);
+    }
+
+    .location-instructions {
+        background: linear-gradient(135deg, #e3f2fd 0%, #bbdefb 100%);
+        padding: 20px;
+        border-radius: 15px;
+        margin-bottom: 20px;
+        border-left: 4px solid #2196f3;
+    }
+
+    .location-instructions p {
+        margin: 5px 0;
+        color: #1565c0;
+        font-weight: 500;
+    }
+
+    .button-group {
+        display: flex;
+        gap: 15px;
+        margin-bottom: 20px;
+        flex-wrap: wrap;
+    }
+
+    .btn {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        border: none;
+        padding: 15px 25px;
+        border-radius: 12px;
+        font-size: 1em;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        flex: 1;
+        min-width: 180px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+    }
+
+    .btn:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 25px rgba(102, 126, 234, 0.3);
+    }
+
+    .btn:active {
+        transform: translateY(0);
+    }
+
+    .btn-secondary {
+        background: linear-gradient(135deg, #ffecd2 0%, #fcb69f 100%);
+        color: #d68910;
+    }
+
+    .btn-secondary:hover {
+        box-shadow: 0 8px 25px rgba(252, 182, 159, 0.3);
+    }
+
+    .btn-submit {
+        background: linear-gradient(135deg, #56ab2f 0%, #a8e6cf 100%);
+        color: white;
+        width: 100%;
+        font-size: 1.2em;
+        padding: 18px;
+        margin-top: 20px;
+    }
+
+    .btn-submit:hover {
+        box-shadow: 0 8px 25px rgba(86, 171, 47, 0.3);
+    }
+
+    .manual-location-group {
+        background: #f8f9fa;
+        padding: 20px;
+        border-radius: 15px;
+        border: 2px dashed #bdc3c7;
+        margin-top: 15px;
+    }
+
+    .manual-location-group .form-group {
+        margin-bottom: 15px;
+    }
+
+    .error {
+        color: #e74c3c;
+        font-size: 0.9em;
+        margin-top: 5px;
+        font-weight: 500;
+    }
+
+    .error-box {
+        background: #fdf2f2;
+        border: 1px solid #e74c3c;
+        padding: 15px;
+        border-radius: 12px;
+        margin: 15px 0;
+    }
+
+    .icon {
+        font-size: 1.2em;
+    }
+
+    /* Responsive */
+    @media (max-width: 768px) {
+        .help-container {
+            padding: 15px;
+            align-items: flex-start;
+            padding-top: 30px;
+        }
+
+        .help-card {
+            padding: 25px;
+        }
+
+        .help-header h2 {
+            font-size: 1.8em;
+        }
+
+        .button-group {
+            flex-direction: column;
+        }
+
+        .btn {
+            min-width: 100%;
+        }
+    }
+
+    /* Success animation */
+    .success-animation {
+        text-align: center;
+        color: #27ae60;
+    }
+
+    .checkmark {
+        font-size: 4em;
+        animation: checkmark 0.6s ease-in-out;
+    }
+
+    @keyframes checkmark {
+        0% { transform: scale(0); }
+        50% { transform: scale(1.2); }
+        100% { transform: scale(1); }
+    }
+</style>
+{% endblock %}
 {% block title %}Yardım Talebi{% endblock %}
 {% block content %}
-<script src="{{ url_for('static', filename='help.js') }}"></script>
-<h2>Yardım Talep Formu</h2>
-<form method="post" class="form" id="helpForm">
-    <div class="form-group">
-        <label for="disasterType">{{ form.disasterType.label }}</label>
-        {{ form.disasterType(class="form-control", id="disasterType") }}
-        {% if form.disasterType.errors %}
-        {% for error in form.disasterType.errors %}
-        <div class="error">{{ error }}</div>
-        {% endfor %}
-        {% endif %}
-    </div>
+<script src="{{ url_for('static', filename='js/help.js') }}"></script>
 
-    <p>Konumunuz otomatik tespit etmek için,</p>
-    <p>Lütfen <strong>"Konumumu Al"</strong> butonuna tıklayın.</p>
+<div class="help-container">
+    <div class="help-card">
+        <div class="help-header">
+            <div class="emergency-icon">🆘</div>
+            <h2>Yardım Talep Formu</h2>
+            <p>Acil durumlarda size en yakın gönüllülerle iletişime geçiyoruz</p>
+        </div>
 
-    <div style="display: none;">
-        {{ form.lat(id="lat") }}
-        {{ form.lng(id="lng") }}
-    </div>
-    {% if form.lat.errors or form.lng.errors %}
-    <div class="error-box" style="color: red; margin: 10px 0;">
-        {% for error in form.lat.errors %}
-        <div class="error">{{ error }}</div>
-        {% endfor %}
-        {% for error in form.lng.errors %}
-        <div class="error">{{ error }}</div>
-        {% endfor %}
-    </div>
-    {% endif %}
-
-    <div class="button-group" style="margin-bottom: 10px">
-        <button type="button" class="btn" id="getLocationButton">Konumumu Al</button>
-        <button type="button" class="btn" id="manualLocationButton">Konumumu Manuel Gir</button>
-    </div>
-
-    <!-- Otomatik konum alınamazsa manuel konum girişi -->
-    <div id="manualLocation" style="display: none; margin-top: 10px">
-        <p>Otomatik konum alınamazsa, lütfen konumunuzu manuel olarak girin:</p>
-        <div class="manual-location-group">
-            <div class="form-group">
-                <label for="province">{{ form.province.label }}</label>
-                {{ form.province(class="form-control", id="province") }}
+        {% if daily_limit_reached %}
+        <div class="alert alert-warning">
+            <h4>⚠️ Günlük Limit Doldu</h4>
+            <p>Günde en fazla 2 yardım talebi gönderebilirsiniz. Gerçek acil durumlar için lütfen 112'yi arayın.</p>
+        </div>
+        {% else %}
+        
+        {% if show_second_request_warning %}
+        <div class="alert alert-warning" style="background: linear-gradient(135deg, #fff3cd 0%, #ffeaa7 100%); border-left: 5px solid #e74c3c;">
+            <h4>🚨 DİKKAT - Son Talebiniz!</h4>
+            <p style="font-weight: 600; margin-bottom: 15px;">Bu günün 2. ve son yardım talebinizi oluşturuyorsunuz.</p>
+            <div style="background: rgba(231, 76, 60, 0.1); padding: 15px; border-radius: 8px; margin: 10px 0;">
+                <p style="margin: 5px 0;"><strong>⚠️ Gerçek bir acil durum mu?</strong></p>
+                <p style="margin: 5px 0;">• Hayati tehlike varsa hemen <strong style="color: #e74c3c;">112'yi arayın</strong></p>
+                <p style="margin: 5px 0;">• Bu talep gerçek ve acil bir ihtiyaç mı kontrol edin</p>
+                <p style="margin: 5px 0;">• Gereksiz talepler gönüllü kaynaklarını tüketir</p>
             </div>
-            <div class="form-group">
-                <label for="district">{{ form.district.label }}</label>
-                {{ form.district(class="form-control", id="district") }}
-            </div>
-            <div class="form-group">
-                <label for="neighborhood">{{ form.neighborhood.label }}</label>
-                {{ form.neighborhood(class="form-control", id="neighborhood") }}
-            </div>
-            <div class="form-group">
-                <label for="street">{{ form.street.label }}</label>
-                {{ form.street(class="form-control", id="street") }}
+            <div style="background: rgba(52, 152, 219, 0.1); padding: 15px; border-radius: 8px; margin: 10px 0;">
+                <p style="margin: 5px 0;"><strong>📞 Destek İletişim:</strong></p>
+                <p style="margin: 5px 0;">Teknik sorun veya bilgi için: <strong>support@afetkoordinasyon.org</strong></p>
+                <p style="margin: 5px 0;">Acil durum koordinasyonu: <strong>+90 850 XXX XX XX</strong></p>
             </div>
         </div>
-    </div>
+        {% endif %}
+        <form method="post" class="form" id="helpForm">
+            <div class="form-group">
+                <label for="disasterType">
+                    <i class="fas fa-exclamation-triangle icon"></i>
+                    {{ form.disasterType.label }}
+                </label>
+                {{ form.disasterType(class="form-control", id="disasterType") }}
+                {% if form.disasterType.errors %}
+                {% for error in form.disasterType.errors %}
+                <div class="error">{{ error }}</div>
+                {% endfor %}
+                {% endif %}
+            </div>
 
-    <!-- Yardım talebi için ek bilgiler -->
-    <div class="form-group">
-        <label for="additional_info">{{ form.additional_info.label }}</label>
-        {{ form.additional_info(class="form-control", id="additional_info", rows="2",
-        placeholder="Örn: İlaç kullanıyorum, engelli vb.") }}
-    </div>
+            <div class="location-instructions">
+                <p><i class="fas fa-map-marker-alt"></i> <strong>Konum Tespiti</strong></p>
+                <p>Konumunuzu otomatik tespit etmek için <strong>"Konumumu Al"</strong> butonuna tıklayın.</p>
+                <p>Otomatik tespit çalışmazsa manuel olarak adres bilgilerinizi girebilirsiniz.</p>
+            </div>
 
-    <button type="submit" class="btn" id="submitHelpRequest" style="margin-top: 15px">
-        Yardım Talebi Gönder
-    </button>
-</form>
+            <div style="display: none;">
+                {{ form.lat(id="lat") }}
+                {{ form.lng(id="lng") }}
+            </div>
+            {% if form.lat.errors or form.lng.errors %}
+            <div class="error-box">
+                {% for error in form.lat.errors %}
+                <div class="error">{{ error }}</div>
+                {% endfor %}
+                {% for error in form.lng.errors %}
+                <div class="error">{{ error }}</div>
+                {% endfor %}
+            </div>
+            {% endif %}
+
+            <div class="button-group">
+                <button type="button" class="btn" id="getLocationButton">
+                    <i class="fas fa-crosshairs"></i> Konumumu Al
+                </button>
+                <button type="button" class="btn btn-secondary" id="manualLocationButton">
+                    <i class="fas fa-edit"></i> Manuel Konum Gir
+                </button>
+            </div>
+
+            <!-- Otomatik konum alınamazsa manuel konum girişi -->
+            <div id="manualLocation" style="display: none;">
+                <div class="manual-location-group">
+                    <h4 style="margin-bottom: 15px; color: #2c3e50;">
+                        <i class="fas fa-map-pin"></i> Adres Bilgileri
+                    </h4>
+                    <div class="form-group">
+                        <label for="province">{{ form.province.label }}</label>
+                        {{ form.province(class="form-control", id="province") }}
+                    </div>
+                    <div class="form-group">
+                        <label for="district">{{ form.district.label }}</label>
+                        {{ form.district(class="form-control", id="district") }}
+                    </div>
+                    <div class="form-group">
+                        <label for="neighborhood">{{ form.neighborhood.label }}</label>
+                        {{ form.neighborhood(class="form-control", id="neighborhood") }}
+                    </div>
+                    <div class="form-group">
+                        <label for="street">{{ form.street.label }}</label>
+                        {{ form.street(class="form-control", id="street") }}
+                    </div>
+                    <div class="form-group">
+                        <label for="building_no">{{ form.building_no.label }}</label>
+                        {{ form.building_no(class="form-control", id="building_no", placeholder="Örn: Kat 3 Daire 8, Blok A No:12") }}
+                    </div>
+                </div>
+            </div>
+
+            <!-- Yardım talebi için ek bilgiler -->
+            <div class="form-group">
+                <label for="additional_info">
+                    <i class="fas fa-info-circle icon"></i>
+                    {{ form.additional_info.label }}
+                </label>
+                {{ form.additional_info(class="form-control", id="additional_info", rows="4",
+                placeholder="Örn: İlaç kullanıyorum, engelim var, yaşlıyım, çocuk var vb. detayları buraya yazabilirsiniz...") }}
+            </div>
+
+            <button type="submit" class="btn btn-submit" id="submitHelpRequest">
+                <i class="fas fa-paper-plane"></i> Yardım Talebi Gönder
+            </button>
+        </form>
+        {% endif %}
+    </div>
+</div>
 {% endblock %}

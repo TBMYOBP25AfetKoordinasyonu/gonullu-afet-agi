@@ -1,63 +1,163 @@
 <!DOCTYPE html>
 <html lang="tr">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>{% block title %}Afet Koordinasyon Sistemi{% endblock %}</title>
+    <link
+      rel="stylesheet"
+      href="{{ url_for('static', filename='base.css') }}"
+    />
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
+    />
+    {% block extra_css %}{% endblock %} {% block head %}
+    <link
+      rel="stylesheet"
+      href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css"
+    />
+    {% endblock %}
+  </head>
 
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>{% block title %}Afet Koordinasyon Sistemi{% endblock %}</title>
-  <link rel="stylesheet" href="{{ url_for('static', filename='base.css') }}" />
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
-  {% block extra_css %}{% endblock %}
-  {% block head %}
-  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css" />
-  {% endblock %}
-</head>
+  <body>
+    <header>
+      <div class="header-container">
+        <h1>Gönüllü Afet Koordinasyon Sistemi</h1>
+        <button class="mobile-menu-toggle" id="mobileMenuToggle">
+          <i class="fas fa-bars"></i>
+        </button>
+      </div>
+      <div class="nav-menu" id="navMenu">
+        <a href="{{ url_for('index') }}"
+          ><i class="fas fa-home"></i> Ana Sayfa</a
+        >
+        <a href="{{ url_for('help_request') }}"
+          ><i class="fas fa-hands-helping"></i> Yardım Talep Et</a
+        >
+        <!--<a href="{{ url_for('about') }}"
+          ><i class="fas fa-info-circle"></i> Hakkında</a
+        >-->
+        {% if session.get('user_id') %} {% if session.get('role') == 'volunteer'
+        %}
+        <a href="{{ url_for('volunteer_panel') }}"
+          ><i class="fas fa-user-shield"></i> Panel</a
+        >
+        {% elif session.get('role') == 'coordinator' %}
+        <a href="{{ url_for('coordinator_panel') }}"
+          ><i class="fas fa-user-shield"></i> Panel</a
+        >
+        {% elif session.get('role') == 'requester' %}
+        <a href="{{ url_for('requester_panel') }}"
+          ><i class="fas fa-user-shield"></i> Panel</a
+        >
+        {% elif session.get('role') == 'admin' %}
+        <a href="{{ url_for('admin_panel') }}"
+          ><i class="fas fa-cogs"></i> Yönetim Paneli</a
+        >
+        {% endif %}
+        <a href="{{ url_for('profile') }}"
+          ><i class="fas fa-user"></i> Profil</a
+        >
+        <a href="{{ url_for('logout') }}"
+          ><i class="fas fa-sign-out-alt"></i> Çıkış Yap</a
+        >
+        {% else %}
+        <a href="{{ url_for('sign_in') }}" class="nav-link">Giriş Yap</a>
+        <a href="{{ url_for('sign_up') }}" class="nav-link">Kayıt Ol</a>
+        {% endif %}
+      </div>
+    </header>
 
-<body>
-  <header>
-    <h1>Gönüllü Afet Koordinasyon Sistemi</h1>
-    <div class="nav-menu">
-      <a href="{{ url_for('index') }}"><i class="fas fa-home"></i> Ana Sayfa</a>
-      <a href="{{ url_for('help_request') }}"><i class="fas fa-hands-helping"></i> Yardım Talep Et</a>      {% if session.get('user_id') %}
-      {% if session.get('role') == 'volunteer' %}
-      <a href="{{ url_for('volunteer_panel') }}"><i class="fas fa-user-shield"></i> Panel</a>
-      {% elif session.get('role') == 'coordinator' %}
-      <a href="{{ url_for('coordinator_panel') }}"><i class="fas fa-user-shield"></i> Panel</a>
-      {% elif session.get('role') == 'requester' %}
-      <a href="{{ url_for('requester_panel') }}"><i class="fas fa-user-shield"></i> Panel</a>
-      {% elif session.get('role') == 'admin' %}
-      <a href="{{ url_for('admin_panel') }}"><i class="fas fa-cogs"></i> Yönetim Paneli</a>
-      {% endif %}
-      <a href="{{ url_for('profile') }}"><i class="fas fa-user"></i> Profil</a>
-      <a href="{{ url_for('logout') }}"><i class="fas fa-sign-out-alt"></i> Çıkış Yap</a>
-      {% else %}
-      <a href="/sign_in" class="nav-link">Giriş Yap</a>
-      <a href="/sign_up" class="nav-link">Kayıt Ol</a>
-      {% endif %}
+    <div class="container">
+      {% with messages = get_flashed_messages(with_categories=true) %} {% if
+      messages %} {% for category, message in messages %}
+      <div class="alert alert-{{ category }}">{{ message }}</div>
+      {% endfor %} {% endif %} {% endwith %}
+
+      <main>{% block content %}{% endblock %}</main>
+      <!--<footer>
+        <div class="footer-content">
+          <div class="footer-main">
+            <div class="footer-brand">
+              <h3><i class="fas fa-hands-helping"></i> Gönüllü Afet Ağı</h3>
+              <p>
+                Afet durumlarında toplumsal dayanışmayı güçlendiren dijital
+                platform.
+              </p>
+            </div>
+
+            <div class="footer-links">
+              <h4>Hızlı Linkler</h4>
+              <a href="{{ url_for('index') }}">Ana Sayfa</a>
+              <a href="{{ url_for('help_request') }}">Yardım Talep Et</a>
+              <a href="{{ url_for('about') }}">Hakkında</a>
+              <a href="{{ url_for('sign_up') }}">Gönüllü Ol</a>
+            </div>
+
+            <div class="footer-contact">
+              <h4>İletişim</h4>
+              <div class="contact-info">
+                <p>
+                  <i class="fas fa-envelope"></i>
+                  koordinasyon@afetkoordinasyon.com
+                </p>
+                <p><i class="fas fa-phone"></i> +90 (212) 555-0123</p>
+                <p><i class="fas fa-clock"></i> 7/24 Hizmet</p>
+                <p><i class="fas fa-map-marker-alt"></i> İstanbul, Türkiye</p>
+              </div>
+              <div class="social-links">
+                <a
+                  href="https://github.com/TBMYOBP25AfetKoordinasyonu/gonullu-afet-agi"
+                  target="_blank"
+                  title="GitHub"
+                >
+                  <i class="fab fa-github"></i>
+                </a>
+              </div>
+            </div>
+
+            <div class="footer-emergency">
+              <h4>Acil Durum</h4>
+              <div class="emergency-numbers">
+                <p><i class="fas fa-phone"></i> 112 - Genel Acil</p>
+                <p><i class="fas fa-ambulance"></i> 112 - Ambulans</p>
+                <p><i class="fas fa-fire"></i> 110 - İtfaiye</p>
+                <p><i class="fas fa-shield-alt"></i> 155 - Polis</p>
+              </div>
+            </div>
+          </div>
+
+          <div class="footer-bottom">
+            <p>
+              © 2025 Gönüllü Afet Koordinasyon Sistemi. Tüm hakları saklıdır.
+            </p>
+            <p class="disclaimer">
+              Bu platform hayati tehlike durumlarında resmi acil servisler
+              yerine geçmez. Acil durumlarda 112'yi arayın.
+            </p>
+          </div>
+        </div>
+      </footer>-->
     </div>
-  </header>
+    {% block scripts %}
+    <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>
+    <script>
+      // Mobile menu toggle
+      document.addEventListener("DOMContentLoaded", function () {
+        const mobileMenuToggle = document.getElementById("mobileMenuToggle");
+        const navMenu = document.getElementById("navMenu");
 
-  <div class="container">
-    {% with messages = get_flashed_messages(with_categories=true) %}
-    {% if messages %}
-    {% for category, message in messages %}
-    <div class="alert alert-{{ category }}">{{ message }}</div>
-    {% endfor %}
-    {% endif %}
-    {% endwith %}
-
-    <main>
-      {% block content %}{% endblock %}
-    </main>
-
-    <footer>
-      <p>© 2024 Afet Koordinasyon Sistemi</p>
-    </footer>
-  </div>
-
-  {% block scripts %}
-  <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>
-  {% endblock %}
-</body>
-
+        if (mobileMenuToggle && navMenu) {
+          mobileMenuToggle.addEventListener("click", function () {
+            navMenu.classList.toggle("nav-menu-open");
+            const icon = mobileMenuToggle.querySelector("i");
+            icon.classList.toggle("fa-bars");
+            icon.classList.toggle("fa-times");
+          });
+        }
+      });
+    </script>
+    {% endblock %}
+  </body>
 </html>

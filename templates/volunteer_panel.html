@@ -4,8 +4,28 @@
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
 {% endblock %} {% block title %}Gönüllü Paneli{% endblock %} {% block content %}
 <div class="volunteer-dashboard">
-  <h2>Gönüllü Paneli</h2>
+  <div class="dashboard-header">
+    <h2>Gönüllü Paneli</h2>
+    <div class="location-info">
+      {% if has_valid_location %}
+      <div class="current-location">
+        <i class="fas fa-map-marker-alt"></i>
+        <span>Mevcut Konum: {{ "%.4f, %.4f" | format(volunteer_location.latitude, volunteer_location.longitude) }}</span>
+        <small class="location-note">Son güncelleme zamanı için profil sayfanızı kontrol edin</small>
+      </div>
+      {% else %}
+      <div class="current-location">
+        <i class="fas fa-exclamation-triangle text-warning"></i>
+        <span class="text-warning">Konum bilgisi bulunamadı. Yardım isteklerini görebilmek için konumunuzu güncelleyin.</span>
+        <button id="headerLocationBtn" class="btn btn-warning btn-sm ml-2" onclick="getCurrentLocation()">
+          <i class="fas fa-map-marker-alt"></i> Konum Ekle
+        </button>
+      </div>
+      {% endif %}
+    </div>
+  </div>
 
+  {% if has_valid_location %}
   <div class="dashboard-grid">
     <!-- Harita Bölümü -->
     <div class="map-section">
@@ -30,6 +50,11 @@
               <option value="{{ req.disaster_type }}">{{ req.disaster_type }}</option>
               {% endfor %}
             </select>
+          </div>
+          <div class="filter-group">
+            <button id="updateLocationBtn" class="btn btn-location" onclick="updateVolunteerLocation()">
+              <i class="fas fa-map-marker-alt"></i> Konumu Yenile
+            </button>
           </div>
         </div>
       </div>
@@ -117,6 +142,35 @@
       {% endif %}
     </div>
   </div>
+  {% else %}
+  <div class="no-location-container">
+    {% if location_outdated %}
+    <div class="alert alert-warning text-center">
+      <h4><i class="fas fa-clock"></i> Konum Bilgisi Güncel Değil</h4>
+      <p>Konum bilginiz 6 saatten eski. Güvenli yardım koordinasyonu için konumunuzu güncelleyin.</p>
+      <button id="updateLocationBtn" class="btn btn-primary" onclick="getCurrentLocation()">
+        <i class="fas fa-map-marker-alt"></i> Konumu Güncelle
+      </button>
+      <div id="locationStatus" class="mt-3"></div>
+    </div>
+    {% else %}
+    <div class="alert alert-warning text-center">
+      <h4><i class="fas fa-exclamation-triangle"></i> Konum Bilgisi Gerekli</h4>
+      <p>Yardım isteklerini görebilmek için konumunuzu ekleyin.</p>
+      <button id="addLocationBtn" class="btn btn-primary" onclick="getCurrentLocation()">
+        <i class="fas fa-map-marker-alt"></i> Konum Ekle
+      </button>
+      <div id="locationStatus" class="mt-3"></div>
+      <div class="location-help mt-3">
+        <small class="text-muted">
+          <i class="fas fa-info-circle"></i> 
+          Tarayıcınız konum iznini isteyecek. Güvenli yardım koordinasyonu için konumunuza erişim gereklidir.
+        </small>
+      </div>
+    </div>
+    {% endif %}
+  </div>
+  {% endif %}
 </div>
 
 <style>
@@ -124,6 +178,100 @@
     padding: 20px;
     max-width: 1400px;
     margin: 0 auto;
+  }
+
+  .no-location-container {
+    padding: 40px 20px;
+    text-align: center;
+  }
+
+  .alert {
+    background: #fff3cd;
+    border: 2px solid #ffeaa7;
+    border-radius: 12px;
+    padding: 30px;
+    margin: 20px auto;
+    max-width: 600px;
+  }
+
+  .alert-warning {
+    color: #856404;
+  }
+
+  .alert h4 {
+    margin-bottom: 15px;
+    color: #d68910;
+  }
+
+  .alert p {
+    margin-bottom: 20px;
+    font-size: 1.1em;
+  }
+
+  .btn-primary {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    border: none;
+    padding: 12px 24px;
+    border-radius: 8px;
+    color: white;
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    font-weight: 500;
+    transition: all 0.3s ease;
+  }
+
+  .btn-primary:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+    color: white;
+    text-decoration: none;
+  }
+
+  .dashboard-header {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    padding: 25px;
+    border-radius: 12px;
+    margin-bottom: 20px;
+    box-shadow: 0 4px 15px rgba(102, 126, 234, 0.2);
+  }
+
+  .dashboard-header h2 {
+    margin: 0 0 15px 0;
+    font-size: 2rem;
+    font-weight: 600;
+  }
+
+  .location-info {
+    background: rgba(255, 255, 255, 0.1);
+    padding: 15px;
+    border-radius: 8px;
+    backdrop-filter: blur(10px);
+  }
+
+  .current-location {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+  }
+
+  .current-location i {
+    font-size: 1.2rem;
+    color: #fff;
+  }
+
+  .current-location span {
+    font-weight: 500;
+    font-size: 1rem;
+  }
+
+  .location-note {
+    opacity: 0.8;
+    font-size: 0.85rem;
+    margin-left: 10px;
   }
 
   .dashboard-grid {
@@ -312,6 +460,27 @@
     color: white;
   }
 
+  .btn-location {
+    background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+    color: white;
+    width: 100%;
+    margin-top: 10px;
+    padding: 10px 15px;
+    font-weight: 600;
+    box-shadow: 0 2px 8px rgba(40, 167, 69, 0.3);
+  }
+
+  .btn-location:hover {
+    background: linear-gradient(135deg, #218838 0%, #1e9876 100%);
+    box-shadow: 0 4px 12px rgba(40, 167, 69, 0.4);
+    transform: translateY(-2px);
+  }
+
+  .btn-location.loading {
+    opacity: 0.7;
+    cursor: not-allowed;
+  }
+
   .btn:hover {
     opacity: 0.9;
     transform: translateY(-1px);
@@ -345,9 +514,10 @@
 <!-- Leaflet JS -->
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script>
+  {% if has_valid_location %}
   let map;
   let markers = [];
-  let volunteerLocation = ['{{ volunteer_location.latitude }}', '{{ volunteer_location.longitude }}'];
+  let volunteerLocation = [{{ volunteer_location.latitude }}, {{ volunteer_location.longitude }}];
 
   // Haritayı başlat
   function initMap() {
@@ -435,6 +605,202 @@
   }
 
   // Sayfa yüklendiğinde haritayı başlat
-  window.addEventListener('load', initMap);
+  window.addEventListener('load', function() {
+    if (typeof initMap === 'function') {
+      initMap();
+    }
+  });
+
+  // Konum yenileme fonksiyonu
+  function updateVolunteerLocation() {
+    const btn = document.getElementById('updateLocationBtn');
+    const icon = btn.querySelector('i');
+    
+    if (!navigator.geolocation) {
+      alert('Tarayıcınız konum desteği sunmuyor.');
+      return;
+    }
+
+    // Buton durumunu güncelle
+    btn.classList.add('loading');
+    btn.disabled = true;
+    icon.className = 'fas fa-spinner fa-spin';
+    btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Konum Alınıyor...';
+
+    navigator.geolocation.getCurrentPosition(
+      function(position) {
+        const newLat = position.coords.latitude;
+        const newLng = position.coords.longitude;
+
+        // Sunucuya yeni konumu gönder
+        fetch('/update-volunteer-location', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            latitude: newLat,
+            longitude: newLng
+          })
+        })
+        .then(response => response.json())
+        .then(data => {
+          if (data.success) {
+            // Konum başarıyla güncellendi
+            volunteerLocation = [newLat, newLng];
+            
+            // Haritayı yeni konuma taşı
+            map.setView(volunteerLocation, 12);
+            
+            // Gönüllü işaretini güncelle
+            map.eachLayer(function(layer) {
+              if (layer.options && layer.options.className === 'volunteer-marker') {
+                map.removeLayer(layer);
+              }
+            });
+            
+            L.marker(volunteerLocation, {
+              icon: L.divIcon({
+                className: 'volunteer-marker',
+                html: '<div style="background-color: #4CAF50; width: 15px; height: 15px; border-radius: 50%; border: 2px solid white;"></div>'
+              })
+            }).addTo(map)
+              .bindPopup('Güncel Konumunuz')
+              .openPopup();
+
+            // Sayfayı yenile (mesafeleri yeniden hesaplamak için)
+            setTimeout(() => {
+              window.location.reload();
+            }, 1500);
+            
+            alert('Konumunuz başarıyla güncellendi!');
+          } else {
+            alert('Konum güncellenirken bir hata oluştu: ' + data.message);
+          }
+        })
+        .catch(error => {
+          console.error('Error:', error);
+          alert('Konum güncellenirken bir hata oluştu.');
+        })
+        .finally(() => {
+          // Buton durumunu sıfırla
+          btn.classList.remove('loading');
+          btn.disabled = false;
+          btn.innerHTML = '<i class="fas fa-map-marker-alt"></i> Konumu Yenile';
+        });
+      },
+      function(error) {
+        let errorMessage = '';
+        switch(error.code) {
+          case error.PERMISSION_DENIED:
+            errorMessage = 'Konum erişimi reddedildi. Lütfen tarayıcı ayarlarınızdan konum erişimini etkinleştirin.';
+            break;
+          case error.POSITION_UNAVAILABLE:
+            errorMessage = 'Konum bilgisi mevcut değil.';
+            break;
+          case error.TIMEOUT:
+            errorMessage = 'Konum alma işlemi zaman aşımına uğradı.';
+            break;
+          default:
+            errorMessage = 'Konum alınırken bilinmeyen bir hata oluştu.';
+            break;
+        }
+        alert(errorMessage);
+        
+        // Buton durumunu sıfırla
+        btn.classList.remove('loading');
+        btn.disabled = false;
+        btn.innerHTML = '<i class="fas fa-map-marker-alt"></i> Konumu Yenile';
+      },
+      {
+        enableHighAccuracy: true,
+        timeout: 10000,
+        maximumAge: 60000
+      }
+    );
+  }
+  {% endif %}
+
+  // Konum alma fonksiyonu (konum olmayan kullanıcılar için)
+  function getCurrentLocation() {
+    const btn = document.getElementById('addLocationBtn') || document.getElementById('updateLocationBtn');
+    const statusDiv = document.getElementById('locationStatus');
+    
+    if (!navigator.geolocation) {
+      statusDiv.innerHTML = '<div class="alert alert-danger">Tarayıcınız konum desteği sunmuyor.</div>';
+      return;
+    }
+
+    // Buton durumunu güncelle
+    btn.disabled = true;
+    btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Konum Alınıyor...';
+    statusDiv.innerHTML = '<div class="alert alert-info">Konum bilgisi alınıyor, lütfen bekleyin...</div>';
+
+    navigator.geolocation.getCurrentPosition(
+      function(position) {
+        const lat = position.coords.latitude;
+        const lng = position.coords.longitude;
+
+        // Sunucuya konum bilgisini gönder
+        fetch('/update-volunteer-location', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            latitude: lat,
+            longitude: lng
+          })
+        })
+        .then(response => response.json())
+        .then(data => {
+          if (data.success) {
+            statusDiv.innerHTML = '<div class="alert alert-success">Konum başarıyla eklendi! Sayfa yenileniyor...</div>';
+            
+            // 2 saniye sonra sayfayı yenile
+            setTimeout(() => {
+              window.location.reload();
+            }, 2000);
+          } else {
+            statusDiv.innerHTML = '<div class="alert alert-danger">Konum eklenirken bir hata oluştu: ' + data.message + '</div>';
+          }
+        })
+        .catch(error => {
+          console.error('Error:', error);
+          statusDiv.innerHTML = '<div class="alert alert-danger">Konum eklenirken bir hata oluştu.</div>';
+        })
+        .finally(() => {
+          btn.disabled = false;
+          btn.innerHTML = '<i class="fas fa-map-marker-alt"></i> Konum Ekle';
+        });
+      },
+      function(error) {
+        let errorMessage = '';
+        switch(error.code) {
+          case error.PERMISSION_DENIED:
+            errorMessage = 'Konum erişimi reddedildi. Lütfen tarayıcı ayarlarınızdan konum erişimini etkinleştirin.';
+            break;
+          case error.POSITION_UNAVAILABLE:
+            errorMessage = 'Konum bilgisi mevcut değil.';
+            break;
+          case error.TIMEOUT:
+            errorMessage = 'Konum alma işlemi zaman aşımına uğradı.';
+            break;
+          default:
+            errorMessage = 'Konum alınırken bilinmeyen bir hata oluştu.';
+            break;
+        }
+        statusDiv.innerHTML = '<div class="alert alert-danger">' + errorMessage + '</div>';
+        
+        btn.disabled = false;
+        btn.innerHTML = '<i class="fas fa-map-marker-alt"></i> Konum Ekle';
+      },
+      {
+        enableHighAccuracy: true,
+        timeout: 10000,
+        maximumAge: 300000
+      }
+    );
+  }
 </script>
 {% endblock %}

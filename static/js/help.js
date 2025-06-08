@@ -58,6 +58,11 @@ document.addEventListener("DOMContentLoaded", function () {
         return response.json();
       })
       .then((data) => {
+        // Alfabetik sıralama
+        data.sort((a, b) =>
+          a.name.localeCompare(b.name, "tr", { sensitivity: "base" })
+        );
+
         provinceSelect.innerHTML =
           '<option value="">Şehir seçiniz</option>' +
           data
@@ -94,6 +99,14 @@ document.addEventListener("DOMContentLoaded", function () {
         const filteredDistricts = data.filter(
           (district) => district.province_id === parseInt(selectedCityId)
         );
+
+        // Alfabetik sıralama
+        filteredDistricts.sort((a, b) =>
+          a.district_name.localeCompare(b.district_name, "tr", {
+            sensitivity: "base",
+          })
+        );
+
         districtSelect.innerHTML =
           '<option value="">İlçe seçiniz</option>' +
           filteredDistricts
@@ -130,6 +143,14 @@ document.addEventListener("DOMContentLoaded", function () {
           (neighborhood) =>
             neighborhood.district_id === parseInt(selectedDistrictId)
         );
+
+        // Alfabetik sıralama
+        filteredNeighborhoods.sort((a, b) =>
+          a.neighborhood_name.localeCompare(b.neighborhood_name, "tr", {
+            sensitivity: "base",
+          })
+        );
+
         neighborhoodSelect.innerHTML =
           '<option value="">Mahalle seçiniz</option>' +
           filteredNeighborhoods
@@ -230,15 +251,18 @@ document.addEventListener("DOMContentLoaded", function () {
             console.log("Sending form data:", Object.fromEntries(formData));
 
             const submitResponse = await fetch(helpForm.action, {
-              method: 'POST',
+              method: "POST",
               body: formData,
               headers: {
-                'Accept': 'application/json'
-              }
+                Accept: "application/json",
+              },
             });
 
             console.log("Response status:", submitResponse.status);
-            console.log("Response headers:", Object.fromEntries(submitResponse.headers));
+            console.log(
+              "Response headers:",
+              Object.fromEntries(submitResponse.headers)
+            );
 
             if (!submitResponse.ok) {
               const errorText = await submitResponse.text();
@@ -261,11 +285,16 @@ document.addEventListener("DOMContentLoaded", function () {
             if (result.success) {
               window.location.href = result.redirect_url;
             } else {
-              throw new Error(result.message || 'Form gönderimi başarısız oldu');
+              throw new Error(
+                result.message || "Form gönderimi başarısız oldu"
+              );
             }
           } catch (error) {
             console.error("Form submission error:", error);
-            alert(error.message || "Form gönderilirken bir hata oluştu. Lütfen tekrar deneyin.");
+            alert(
+              error.message ||
+                "Form gönderilirken bir hata oluştu. Lütfen tekrar deneyin."
+            );
           }
         } else {
           console.error("API yanıtında konum bulunamadı:", data);
@@ -282,23 +311,25 @@ document.addEventListener("DOMContentLoaded", function () {
       logFormData();
       const formData = new FormData(helpForm);
       fetch(helpForm.action, {
-        method: 'POST',
+        method: "POST",
         body: formData,
         headers: {
-          'Accept': 'application/json'
-        }
+          Accept: "application/json",
+        },
       })
-        .then(response => response.json())
-        .then(result => {
+        .then((response) => response.json())
+        .then((result) => {
           if (result.success) {
             window.location.href = result.redirect_url;
           } else {
-            throw new Error(result.message || 'Form gönderimi başarısız oldu');
+            throw new Error(result.message || "Form gönderimi başarısız oldu");
           }
         })
-        .catch(error => {
-          console.error('Form gönderimi sırasında hata:', error);
-          alert('Form gönderimi sırasında bir hata oluştu. Lütfen tekrar deneyin.');
+        .catch((error) => {
+          console.error("Form gönderimi sırasında hata:", error);
+          alert(
+            "Form gönderimi sırasında bir hata oluştu. Lütfen tekrar deneyin."
+          );
         });
     }
   });
@@ -312,6 +343,7 @@ document.addEventListener("DOMContentLoaded", function () {
       district: districtSelect.value,
       neighborhood: neighborhoodSelect.value,
       street: streetSelect.value,
+      building_no: document.getElementById("building_no")?.value || "",
       additional_info: document.getElementById("additional_info")?.value || "",
     });
   }
@@ -322,7 +354,7 @@ document.addEventListener("DOMContentLoaded", function () {
       const data = await response.json();
 
       // Verileri alfabetik sırala
-      data.sort((a, b) => a.street_name.localeCompare(b.street_name, 'tr'));
+      data.sort((a, b) => a.street_name.localeCompare(b.street_name, "tr"));
 
       const streetSelect = document.getElementById("street");
       streetSelect.innerHTML = '<option value="">Sokak Seçiniz</option>';

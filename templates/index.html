@@ -2,19 +2,147 @@
 
 {% block title %}Ana Sayfa - Afet Koordinasyon Sistemi{% endblock %}
 
+{% block extra_css %}
+<link rel="stylesheet" href="{{ url_for('static', filename='index.css') }}">
+{% endblock %}
+
 {% block content %}
-<div class="container">
-    <h1>Afet Yardım Koordinasyon Platformu</h1>
-    
-    <h2>Bu sistem, afet durumlarında yardıma ihtiyaç duyan afetzedeler ile gönüllü yardım sağlayıcıları arasında köprü
-        kurmayı amaçlamaktadır.</h2>
-
-    <div class="features">
-        <h3>Afetzedeler İçin</h3>
-        <button class="btn btn-primary" onclick="window.location.href='/help'">Yardım Talep Et</button>
-
-        <h3>Gönüllüler İçin</h3>
-        <button class="btn btn-primary" onclick="window.location.href='/volunteer-panel'">Gönüllü Paneli</button>
+<!-- Hero Section -->
+<div class="hero-section">
+    <div class="hero-content">
+        <h1 class="hero-title">
+            <i class="fas fa-hands-helping"></i>
+            Afet Koordinasyon Sistemi
+        </h1>
+        <p class="hero-subtitle">
+            Afet durumlarında yardıma ihtiyaç duyan vatandaşlar ile gönüllü yardım kuruluşları arasında güvenli ve hızlı iletişim sağlayan dijital platform
+        </p>
+        
+        {% if not session.get('user_id') %}
+        <div class="quick-actions">
+            <a href="/sign_up" class="hero-btn">
+                <i class="fas fa-user-plus"></i>
+                Hemen Kayıt Ol
+            </a>
+            <a href="/sign_in" class="hero-btn">
+                <i class="fas fa-sign-in-alt"></i>
+                Giriş Yap
+            </a>
+        </div>
+        {% endif %}
     </div>
+</div>
+
+<!-- Features Section -->
+<div class="features-grid">
+    <div class="feature-card">
+        <i class="fas fa-exclamation-triangle feature-icon"></i>
+        <h3 class="feature-title">Afetzedeler İçin</h3>
+        <p class="feature-description">
+            Acil durumda yardım talebi oluşturun, konumunuzu belirtin ve en yakın gönüllülerden hızlıca destek alın.
+        </p>
+        {% if session.get('role') == 'requester' %}
+            <a href="/help" class="feature-btn">Yardım Talep Et</a>
+        {% elif session.get('role') == 'volunteer' %}
+            <a href="/help" class="feature-btn">Yardım Talepleri</a>
+        {% else %}
+            <a href="/sign_up?role=requester" class="feature-btn">Afetzede Kaydı</a>
+        {% endif %}
+    </div>
+    
+    <div class="feature-card">
+        <i class="fas fa-heart feature-icon"></i>
+        <h3 class="feature-title">Gönüllüler İçin</h3>
+        <p class="feature-description">
+            Çevrenizde yardıma ihtiyaç duyan insanlara ulaşın, yeteneklerinizi paylaşın ve hayat kurtarın.
+        </p>
+        {% if session.get('role') == 'volunteer' %}
+            <a href="/volunteer-panel" class="feature-btn">Gönüllü Paneli</a>
+        {% elif session.get('role') == 'requester' %}
+            <a href="/volunteer-panel" class="feature-btn">Gönüllü Ol</a>
+        {% else %}
+            <a href="/sign_up?role=volunteer" class="feature-btn">Gönüllü Kaydı</a>
+        {% endif %}
+    </div>
+    
+    <div class="feature-card">
+        <i class="fas fa-users-cog feature-icon"></i>
+        <h3 class="feature-title">Koordinatörler İçin</h3>
+        <p class="feature-description">
+            Bölgenizdeki afet durumlarını yönetin, kaynakları koordine edin ve etkili müdahale sağlayın.
+        </p>
+        {% if session.get('role') == 'coordinator' %}
+            <a href="/coordinator-panel" class="feature-btn">Koordinatör Paneli</a>
+        {% else %}
+            <a href="/sign_up?role=coordinator" class="feature-btn">Koordinatör Başvurusu</a>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Stats Section -->
+<div class="stats-section">
+    <h2 class="section-title">Birlikte Güçlüyüz</h2>
+    <p class="section-subtitle">Platformumuzda gerçekleşen yardımlaşma istatistikleri</p>
+    
+    <div class="stats-grid">
+        <div class="stat-item">
+            <span class="stat-number">1,245</span>
+            <div class="stat-label">Aktif Gönüllü</div>
+        </div>
+        <div class="stat-item">
+            <span class="stat-number">3,678</span>
+            <div class="stat-label">Tamamlanan Yardım</div>
+        </div>
+        <div class="stat-item">
+            <span class="stat-number">89</span>
+            <div class="stat-label">Şehir Kapsamı</div>
+        </div>
+        <div class="stat-item">
+            <span class="stat-number">24/7</span>
+            <div class="stat-label">Kesintisiz Hizmet</div>
+        </div>
+    </div>
+</div>
+
+<!-- How It Works Section -->
+<div class="how-it-works">
+    <h2 class="section-title">Nasıl Çalışır?</h2>
+    <p class="section-subtitle">Sadece 3 adımda yardım alın veya yardım edin</p>
+    
+    <div class="steps-grid">
+        <div class="step-item">
+            <div class="step-number">1</div>
+            <h4 class="step-title">Kayıt Olun</h4>
+            <p class="step-description">
+                Hızlı ve güvenli kayıt işlemi ile sisteme dahil olun. Kimlik doğrulaması yapılarak güvenilir bir platform sağlıyoruz.
+            </p>
+        </div>
+        
+        <div class="step-item">
+            <div class="step-number">2</div>
+            <h4 class="step-title">Talep Oluşturun veya Kabul Edin</h4>
+            <p class="step-description">
+                Yardıma ihtiyacınız varsa talep oluşturun, gönüllüyseniz yakınızdaki talepleri görüntüleyin ve kabul edin.
+            </p>
+        </div>
+        
+        <div class="step-item">
+            <div class="step-number">3</div>
+            <h4 class="step-title">Yardımlaşın</h4>
+            <p class="step-description">
+                Güvenli iletişim kanalları ile buluşun, yardımı gerçekleştirin ve hayatları olumlu yönde etkileyin.
+            </p>
+        </div>
+    </div>
+</div>
+
+<!-- Emergency Notice -->
+<div class="feature-card" style="background: #fff3cd; border-left: 5px solid #ffc107; margin-top: 3rem;">
+    <i class="fas fa-info-circle feature-icon" style="color: #856404;"></i>
+    <h3 class="feature-title" style="color: #856404;">Acil Durum Bildirimi</h3>
+    <p class="feature-description" style="color: #856404;">
+        <strong>Hayati tehlike durumlarında önce 112'yi arayın!</strong><br>
+        Bu platform, resmi acil durum hizmetlerini destekleyici nitelikte olup, hayati tehlike arz eden durumlar için birincil çözüm değildir.
+    </p>
 </div>
 {% endblock %}

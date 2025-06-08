@@ -124,6 +124,30 @@
     border-radius: 8px;
     margin-top: 15px;
   }
+
+  .alert {
+    background: #fff3cd;
+    border: 1px solid #ffeaa7;
+    color: #856404;
+    padding: 15px;
+    border-radius: 8px;
+    margin: 15px 0;
+  }
+
+  .alert-warning {
+    background: linear-gradient(135deg, #ffecd2 0%, #fcb69f 100%);
+    border-color: #f39c12;
+    color: #d68910;
+  }
+
+  .alert i {
+    margin-right: 8px;
+  }
+
+  .status-active {
+    background: #28a745 !important;
+    color: white !important;
+  }
 </style>
 
 <div class="profile-container">
@@ -146,63 +170,57 @@
     </div>
   </div>
 
-  {% if help_requests %}
+  {% if session.role == 'volunteer' %}
   <div class="profile-section">
-    <h2>Yardım Taleplerim</h2>
-    {% for request in help_requests %}
-    <div class="request-item">
+    <h2><i class="fas fa-map-marker-alt"></i> Konum Bilgileri</h2>
+    {% if volunteer_location and volunteer_location.latitude and
+    volunteer_location.longitude %}
+    <div class="profile-info">
       <div>
-        <p><strong>Afet Türü:</strong> {{ request.disaster_type }}</p>
-        <p class="request-date">
-          <strong>Tarih:</strong> {{ request.created_at }}
+        <p>
+          <strong>Koordinatlar:</strong> {{ "%.6f, %.6f" |
+          format(volunteer_location.latitude, volunteer_location.longitude) }}
         </p>
-        <p class="request-location">
-          <strong>Konum:</strong> {{ request.latitude }}, {{ request.longitude
-          }}
+        {% if volunteer_location.updated_at %}
+        <p>
+          <strong>Son Güncelleme:</strong> {{ volunteer_location.updated_at }}
         </p>
-        {% if request.additional_info %}
-        <p><strong>Ek Bilgiler:</strong> {{ request.additional_info }}</p>
         {% endif %}
       </div>
       <div>
-        <p>
-          <strong>Durum:</strong>
-          <span class="status-badge status-{{ request.status.lower() }}"
-            >{{ request.status }}</span
-          >
-        </p>
-      </div>
-    </div>
-    {% endfor %}
-  </div>
-  {% endif %} {% if session.role == 'volunteer' and volunteer_help_requests %}
-  <div class="profile-section">
-    <h2>Katıldığım Yardımlar</h2>
-    {% for request in volunteer_help_requests %}
-    <div class="request-item">
-      <div>
-        <p><strong>Afet Türü:</strong> {{ request.disaster_type }}</p>
-        <p class="request-date">
-          <strong>Tarih:</strong> {{ request.created_at }}
-        </p>
-        <p class="request-location">
-          <strong>Konum:</strong> {{ request.latitude }}, {{ request.longitude
-          }}
-        </p>
-        {% if request.additional_info %}
-        <p><strong>Ek Bilgiler:</strong> {{ request.additional_info }}</p>
+        {% if volunteer_location.created_at %}
+        <p><strong>İlk Kayıt:</strong> {{ volunteer_location.created_at }}</p>
         {% endif %}
-      </div>
-      <div>
         <p>
           <strong>Durum:</strong>
-          <span class="status-badge status-{{ request.status.lower() }}"
-            >{{ request.status }}</span
-          >
+          <span class="status-badge status-active">Aktif</span>
         </p>
       </div>
     </div>
-    {% endfor %}
+    <div style="margin-top: 15px">
+      <a href="{{ url_for('volunteer_panel') }}" class="edit-btn">
+        <i class="fas fa-sync-alt"></i> Konumu Güncelle
+      </a>
+      <small style="color: #666; margin-left: 15px">
+        Gönüllü panelindeki "Konumu Yenile" butonunu kullanarak konumunuzu
+        güncelleyebilirsiniz.
+      </small>
+    </div>
+    {% else %}
+    <div class="alert alert-warning">
+      <p>
+        <i class="fas fa-exclamation-triangle"></i> Henüz konum bilginiz
+        bulunmuyor.
+      </p>
+      <p>
+        Yardım isteklerini görebilmek ve görevlere katılabilmek için konum
+        bilginizi eklemeniz gerekiyor.
+      </p>
+      <a href="{{ url_for('volunteer_panel') }}" class="edit-btn">
+        <i class="fas fa-map-marker-alt"></i> Konum Ekle
+      </a>
+    </div>
+    {% endif %}
   </div>
   {% endif %}
 
@@ -282,46 +300,26 @@
     </div>
     {% endif %}
   </div>
-  {% endif %} {% if help_requests %}
+  {% endif %}
+
+  <!-- Yardım Talepleri Yönetimi (Sadece Afetzedeler İçin) -->
+  {% if session.role == 'requester' %}
   <div class="profile-section">
-    <h2><i class="fas fa-exclamation-triangle"></i> Yardım Taleplerim</h2>
-    {% for request in help_requests %}
-    <div class="request-item">
-      <div>
-        <h4>{{ request.disaster_type or 'Belirtilmemiş' }}</h4>
-        <p>
-          <strong>Durum:</strong>
-          <span class="status-badge status-{{ request.status }}">
-            {% if request.status == 'pending' %}Beklemede {% elif request.status
-            == 'active' %}Aktif {% elif request.status == 'completed'
-            %}Tamamlandı {% else %}{{ request.status }} {% endif %}
-          </span>
-        </p>
-        <p><strong>Tarih:</strong> {{ request.created_at }}</p>
-        {% if request.additional_info %}
-        <p><strong>Detaylar:</strong> {{ request.additional_info }}</p>
-        {% endif %}
-      </div>
-      <div>
-        {% if request.latitude and request.longitude %}
-        <p>
-          <strong>Konum:</strong> {{ "%.4f"|format(request.latitude) }}, {{
-          "%.4f"|format(request.longitude) }}
-        </p>
-        {% endif %}
-      </div>
+    <h2><i class="fas fa-exclamation-triangle"></i> Yardım Talepleri Yönetimi</h2>
+    <p>Yardım taleplerinizi görüntülemek ve yönetmek için afetzede panelinizi kullanabilirsiniz.</p>
+    <div style="display: flex; gap: 10px; margin-top: 15px;">
+      <a href="{{ url_for('requester_panel') }}" class="edit-btn">
+        <i class="fas fa-list"></i> Yardım Taleplerim
+      </a>
+      <a href="{{ url_for('help_request') }}" class="edit-btn" style="background-color: #28a745;">
+        <i class="fas fa-plus"></i> Yeni Talep Oluştur
+      </a>
     </div>
-    {% endfor %}
   </div>
-  {% else %}
-  <div class="profile-section">
-    <h2><i class="fas fa-exclamation-triangle"></i> Yardım Taleplerim</h2>
-    <p>Henüz bir yardım talebiniz bulunmuyor.</p>
-    <a href="{{ url_for('help_request') }}" class="edit-btn">
-      <i class="fas fa-plus"></i> Yardım Talebi Oluştur
-    </a>
-  </div>
-  {% endif %} {% if session.role == 'volunteer' and volunteer_help_requests %}
+  {% endif %}
+
+  <!-- Katıldığım Yardımlar Bölümü (Sadece Gönüllüler İçin) -->
+  {% if session.role == 'volunteer' and volunteer_help_requests %}
   <div class="profile-section">
     <h2><i class="fas fa-hands-helping"></i> Katıldığım Yardımlar</h2>
     {% for request in volunteer_help_requests %}
@@ -330,7 +328,7 @@
         <h4>{{ request.disaster_type or 'Belirtilmemiş' }}</h4>
         <p>
           <strong>Durum:</strong>
-          <span class="status-badge status-{{ request.status }}">
+          <span class="status-badge status-{{ request.status.lower() }}">
             {% if request.status == 'pending' %}Beklemede {% elif request.status
             == 'active' %}Aktif {% elif request.status == 'completed'
             %}Tamamlandı {% else %}{{ request.status }} {% endif %}

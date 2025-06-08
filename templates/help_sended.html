@@ -1,133 +1,280 @@
-{% extends "base.html" %}
-
-{% block title %}Yardım Talebi Gönderildi{% endblock %}
-
-{% block content %}
-<div class="success-message">
+{% extends "base.html" %} {% block title %}Yardım Talebi Gönderildi{% endblock
+%} {% block content %}
+<div class="help-sent-container">
+  <div class="success-card">
+    <div class="success-icon">✓</div>
     <h2>Yardım Talebiniz Alındı</h2>
-    <p>Yardım talebiniz başarıyla alındı. En kısa sürede size ulaşılacaktır.</p>
-    <p>Afet Türü: {{ data }}</p>
-    <div class="button-group">
-        <a href="{{ url_for('index') }}" class="btn">Ana Sayfaya Dön</a>
-        <a href="{{ url_for('help_request') }}" class="btn">Yeni Yardım Talebi</a>
+    <p class="status">
+      Talebiniz koordinatörlere iletildi. En kısa sürede size ulaşılacaktır.
+    </p>
+    <div class="disaster-info">
+      <span class="label">Afet Türü:</span>
+      <span class="value">{{ data or 'Belirtilmemiş' }}</span>
     </div>
-</div>
+  </div>
 
-<div class="container">
-    <div class="success-message">
-        <h2>✅ Yardım çağrınız başarıyla alındı</h2>
-        <p class="status-info">Yardım talebiniz şu anda değerlendirme aşamasında. En kısa sürede size ulaşılacaktır.</p>
-        <div class="important-info">
-            <h3>Önemli Bilgiler:</h3>
-            <ul>
-                <li>Telefonunuzu açık ve şarjlı tutun</li>
-                <li>Konumunuzu değiştirmeyin</li>
-                <li>Yardım ekibi size ulaşana kadar güvenli bir yerde bekleyin</li>
-            </ul>
-        </div>
+  <div class="instructions-card">
+    <h3>Şimdi Yapmanız Gerekenler:</h3>
+    <div class="instruction-list">
+      <div class="instruction-item">
+        <span class="step">1</span>
+        <span class="text">Telefonunuzu açık ve şarjlı tutun</span>
+      </div>
+      <div class="instruction-item">
+        <span class="step">2</span>
+        <span class="text">Mevcut konumunuzda kalın</span>
+      </div>
+      <div class="instruction-item">
+        <span class="step">3</span>
+        <span class="text">Güvenli bir yerde bekleyin</span>
+      </div>
     </div>
-    
-    <div class="disaster-advice">
-        <h3>Afet Türünüze Özel Tavsiyeler:</h3>
-        <div id="sonuc" class="advice-content">
-            {% if data %}
-                {% set afet_turu = data|lower %}
-                {% if afet_turu == "deprem" %}
-                    <div class="advice-item">
-                        <h4>Deprem Sırasında Yapılması Gerekenler:</h4>
-                        <ul>
-                            <li>Sakin kalın ve en yakın sağlam yapının kenarına geçin</li>
-                            <li>Hayat üçgeni oluşturabilecek bir alana sığının</li>
-                            <li>Telefonunuzun şarjını koruyun</li>
-                            <li>Yetkililerden gelecek bilgilere odaklanın</li>
-                        </ul>
-                    </div>
-                {% elif afet_turu == "sel" %}
-                    <div class="advice-item">
-                        <h4>Sel Sırasında Yapılması Gerekenler:</h4>
-                        <ul>
-                            <li>Yüksek ve güvenli bir bölgeye hemen ulaşın</li>
-                            <li>Asla suyla kaplı yollardan geçmeye çalışmayın</li>
-                            <li>Elektrik kaynaklarından uzak durun</li>
-                            <li>Yetkililerin uyarılarını dikkatle takip edin</li>
-                        </ul>
-                    </div>
-                {% elif afet_turu == "heyelan" or afet_turu == "toprak kayması" %}
-                    <div class="advice-item">
-                        <h4>Heyelan/Toprak Kayması Sırasında Yapılması Gerekenler:</h4>
-                        <ul>
-                            <li>Toprakta çatlaklar, ağaçlarda eğilme veya ani sesler fark ederseniz hemen bulunduğunuz bölgeden uzaklaşın</li>
-                            <li>Mümkünse yüksek ve sağlam bir zemine çıkın</li>
-                            <li>Yetkililerin talimatlarını bekleyin</li>
-                        </ul>
-                    </div>
-                {% elif afet_turu == "çığ" %}
-                    <div class="advice-item">
-                        <h4>Çığ Sırasında Yapılması Gerekenler:</h4>
-                        <ul>
-                            <li>Bir çığ sesi veya hareketi fark ederseniz hemen bulunduğunuz yamaçtan uzaklaşın</li>
-                            <li>Ağaçlık veya kaya korunaklarına sığının</li>
-                            <li>Ağzınızı ve burnunuzu örtün</li>
-                            <li>Kollarınızı yüzünüzün önünde tutarak nefes alabileceğiniz bir boşluk oluşturun</li>
-                        </ul>
-                    </div>
-                {% elif afet_turu == "yangın" %}
-                    <div class="advice-item">
-                        <h4>Yangın Sırasında Yapılması Gerekenler:</h4>
-                        <ul>
-                            <li>Yoğun duman ve alev gördüğünüzde hızla rüzgarın aksi yönüne doğru ilerleyin</li>
-                            <li>Açık ve güvenli bir alana çıkın</li>
-                            <li>Ağzınızı ve burnunuzu ıslak bir bezle kapatın</li>
-                            <li>Mümkünse yere yakın hareket edin</li>
-                        </ul>
-                    </div>
-                {% elif afet_turu == "fırtına" %}
-                    <div class="advice-item">
-                        <h4>Fırtına Sırasında Yapılması Gerekenler:</h4>
-                        <ul>
-                            <li>Kapalı ve güvenli bir alana sığının</li>
-                            <li>Pencerelerden uzak durun</li>
-                            <li>Elektrikli cihazları kapatın</li>
-                            <li>Yetkililerin uyarılarını takip edin</li>
-                        </ul>
-                    </div>
-                {% else %}
-                    <div class="advice-item">
-                        <h4>Genel Tavsiyeler:</h4>
-                        <ul>
-                            <li>Sakin kalın ve yetkililerin talimatlarını bekleyin</li>
-                            <li>Güvenli bir yerde olduğunuzdan emin olun</li>
-                            <li>Telefonunuzu şarjlı tutun</li>
-                            <li>Yardım ekibinin size ulaşmasını bekleyin</li>
-                        </ul>
-                    </div>
-                {% endif %}
-            {% else %}
-                <div class="advice-item">
-                    <h4>Genel Tavsiyeler:</h4>
-                    <ul>
-                        <li>Sakin kalın ve yetkililerin talimatlarını bekleyin</li>
-                        <li>Güvenli bir yerde olduğunuzdan emin olun</li>
-                        <li>Telefonunuzu şarjlı tutun</li>
-                        <li>Yardım ekibinin size ulaşmasını bekleyin</li>
-                    </ul>
-                </div>
-            {% endif %}
-        </div>
-    </div>
+  </div>
+
+  {% if data %}
+  <div class="advice-card">
+    <h3>{{ data }} için Acil Tavsiyeler:</h3>
+    {% set afet_turu = data|lower %} {% if afet_turu == "deprem" %}
+    <ul class="advice-list">
+      <li>Sağlam bir yapının yanına geçin</li>
+      <li>Cam ve ağır eşyalardan uzak durun</li>
+      <li>Artçı sarsıntılara hazırlıklı olun</li>
+    </ul>
+    {% elif afet_turu == "sel" %}
+    <ul class="advice-list">
+      <li>Yüksek bir yere çıkın</li>
+      <li>Suyun içinden geçmeyin</li>
+      <li>Elektrik tesisatından uzak durun</li>
+    </ul>
+    {% elif afet_turu == "yangın" %}
+    <ul class="advice-list">
+      <li>Dumandan uzak durun, alçak pozisyonda kalın</li>
+      <li>Rüzgarın aksi yönüne gidin</li>
+      <li>Ağzınızı ıslak bezle kapatın</li>
+    </ul>
+    {% elif afet_turu == "heyelan" or afet_turu == "toprak kayması" %}
+    <ul class="advice-list">
+      <li>Yamaçlardan uzaklaşın</li>
+      <li>Sağlam zemine geçin</li>
+      <li>Ses ve titreşimlere dikkat edin</li>
+    </ul>
+    {% elif afet_turu == "çığ" %}
+    <ul class="advice-list">
+      <li>Yamaçtan hızla uzaklaşın</li>
+      <li>Ağaçlık alanlara sığının</li>
+      <li>Nefes boşluğu oluşturun</li>
+    </ul>
+    {% elif afet_turu == "fırtına" %}
+    <ul class="advice-list">
+      <li>Kapalı alanda kalın</li>
+      <li>Pencerelerden uzak durun</li>
+      <li>Elektrikli cihazları kapatın</li>
+    </ul>
+    {% else %}
+    <ul class="advice-list">
+      <li>Sakin kalın</li>
+      <li>Güvenli alanda bekleyin</li>
+      <li>Yetkililerin talimatlarını izleyin</li>
+    </ul>
+    {% endif %}
+  </div>
+  {% endif %}
+
+  <div class="action-buttons">
+    <a href="{{ url_for('index') }}" class="btn btn-secondary">Ana Sayfa</a>
+    <a href="{{ url_for('help_request') }}" class="btn btn-primary"
+      >Yeni Talep</a
+    >
+  </div>
 </div>
 
 <style>
-    .container {
-        font-family: Arial, sans-serif;
-        padding: 2rem;
-        background-color: #f0f4f8;
+  .help-sent-container {
+    max-width: 600px;
+    margin: 20px auto;
+    padding: 20px;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+      sans-serif;
+  }
+
+  .success-card {
+    background: #fff;
+    border: 1px solid #e0e0e0;
+    border-radius: 8px;
+    padding: 20px;
+    text-align: center;
+    margin-bottom: 20px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  }
+
+  .success-icon {
+    width: 50px;
+    height: 50px;
+    background: #4caf50;
+    color: white;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 24px;
+    font-weight: bold;
+    margin: 0 auto 15px;
+  }
+
+  .success-card h2 {
+    margin: 0 0 10px 0;
+    font-size: 20px;
+    color: #333;
+  }
+
+  .status {
+    color: #666;
+    margin: 0 0 15px 0;
+    font-size: 14px;
+  }
+
+  .disaster-info {
+    background: #f5f5f5;
+    padding: 10px;
+    border-radius: 4px;
+    display: inline-block;
+  }
+
+  .disaster-info .label {
+    font-weight: 600;
+    color: #333;
+  }
+
+  .disaster-info .value {
+    color: #2196f3;
+    font-weight: 600;
+    margin-left: 5px;
+  }
+
+  .instructions-card,
+  .advice-card {
+    background: #fff;
+    border: 1px solid #e0e0e0;
+    border-radius: 8px;
+    padding: 20px;
+    margin-bottom: 20px;
+  }
+
+  .instructions-card h3,
+  .advice-card h3 {
+    margin: 0 0 15px 0;
+    font-size: 16px;
+    color: #333;
+    border-bottom: 2px solid #f0f0f0;
+    padding-bottom: 8px;
+  }
+
+  .instruction-list {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .instruction-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .step {
+    width: 24px;
+    height: 24px;
+    background: #2196f3;
+    color: white;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 12px;
+    font-weight: bold;
+    flex-shrink: 0;
+  }
+
+  .text {
+    color: #333;
+    font-size: 14px;
+  }
+
+  .advice-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+  }
+
+  .advice-list li {
+    padding: 8px 0;
+    border-bottom: 1px solid #f0f0f0;
+    font-size: 14px;
+    color: #333;
+    position: relative;
+    padding-left: 20px;
+  }
+
+  .advice-list li:before {
+    content: "▸";
+    color: #ff9800;
+    position: absolute;
+    left: 0;
+    font-weight: bold;
+  }
+
+  .advice-list li:last-child {
+    border-bottom: none;
+  }
+
+  .action-buttons {
+    display: flex;
+    gap: 10px;
+    justify-content: center;
+    margin-top: 30px;
+  }
+
+  .btn {
+    padding: 10px 20px;
+    border: none;
+    border-radius: 5px;
+    text-decoration: none;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+
+  .btn-primary {
+    background: #2196f3;
+    color: white;
+  }
+
+  .btn-secondary {
+    background: #f5f5f5;
+    color: #333;
+    border: 1px solid #ddd;
+  }
+
+  .btn:hover {
+    opacity: 0.9;
+    transform: translateY(-1px);
+  }
+
+  @media (max-width: 768px) {
+    .help-sent-container {
+      margin: 10px;
+      padding: 15px;
     }
-    .alert {
-        margin-top: 1rem;
-        padding: 1rem;
-        background-color: #e8f5e9;
-        border-left: 5px solid #4caf50;
+
+    .action-buttons {
+      flex-direction: column;
     }
+
+    .btn {
+      width: 100%;
+      text-align: center;
+    }
+  }
 </style>
 {% endblock %}

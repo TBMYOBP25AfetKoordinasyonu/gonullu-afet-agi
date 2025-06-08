@@ -24,9 +24,49 @@ import sqlite3
 import os
 import math
 import re
+import random
+import datetime
 
 SIGN_UP_TEMPLATE = "sign_up.html"
 SIGN_IN_TEMPLATE = "sign_in.html"
+
+# Rastgele yardım talepleri listesi (15 adet)
+REALISTIC_REQUESTS = [
+    "Deprem sonrası evimiz kullanılamaz halde. Acil barınma yeri ihtiyacımız var.",
+    "Sel sularına kapılan eşyalarımızı kaybettik. Giyecek ve battaniye ihtiyacımız var.",
+    "Yaşlı annem için ilaç temin etmemiz gerekiyor. Eczaneler kapalı.",
+    "Çocuklarım için bebek maması ve bez ihtiyacımız var acil olarak.",
+    "Evimizin çatısı yangında zarar gördü. Geçici onarım yapılması gerekiyor.",
+    "Su ve gıda sıkıntımız var. Temel ihtiyaç malzemelerine ihtiyacımız var.",
+    "Depremden sonra psikolojik destek ihtiyacımız var. Çocuklarım çok korkuyor.",
+    "Evimizin elektrik tesisatı hasarlı. Elektrikçi yardımına ihtiyacımız var.",
+    "Yaralı komşumuz var, hastaneye ulaştırılması gerekiyor.",
+    "Enkaz altında kalan eşyalarımızı çıkarabilmek için yardıma ihtiyacımız var.",
+    "Heyelan nedeniyle yolumuz kapandı, acil ulaşım desteği gerekiyor.",
+    "Yangın sonrası temiz su kaynağımız kalmadı, su ihtiyacımız var.",
+    "Çığ altında kalan aracımızı çıkarmak için kurtarma ekibi gerekiyor.",
+    "Yaşlı babam için oksijen tüpü ve tıbbi malzeme ihtiyacımız var.",
+    "Fırtına nedeniyle çatımız uçtu, geçici barınak kurulması gerekiyor.",
+]
+
+# Rastgele last_login tarihleri listesi son 6 ay içinde
+LAST_LOGIN_DATES = [
+    "2025-01-15 10:30:00",
+    "2025-01-20 14:45:00",
+    "2025-02-05 09:15:00",
+    "2025-02-10 16:00:00",
+    "2025-02-25 11:20:00",
+    "2025-03-01 08:00:00",
+    "2025-03-10 12:30:00",
+    "2025-03-15 15:45:00",
+    "2025-04-01 09:00:00",
+    "2025-04-10 13:30:00",
+    "2025-04-20 10:15:00",
+    "2025-05-01 11:45:00",
+    "2025-05-10 14:00:00",
+    "2025-05-20 09:30:00",
+    "2025-06-01 12:15:00",
+]
 
 app = Flask(__name__)
 # Basit bir secret key
@@ -163,13 +203,84 @@ class HelpRequestForm(FlaskForm):
         choices=[],
         coerce=lambda x: int(x) if x else None,
     )
+    building_no = StringField(
+        "Bina / Daire No (İsteğe bağlı)",
+        [validators.Optional(), validators.Length(max=50)]
+    )
     additional_info = TextAreaField("Ek Bilgiler", [validators.Optional()])
+
+
+# --- Helper Functions ---
+def check_daily_request_limit(conn, user_id=None, ip_address=None):
+    """
+    Günlük yardım talebi sınırını kontrol eder
+    Returns: (can_request: bool, current_count: int)
+    """
+    c = conn.cursor()
+    today = "DATE('now')"  # SQLite date format
+
+    if user_id:
+        # Giriş yapmış kullanıcı için kontrol
+        c.execute(
+            f"SELECT request_count FROM daily_request_limits WHERE user_id = ? AND request_date = {today}",
+            (user_id,),
+        )
+    else:
+        # Anonim kullanıcı için IP kontrolü
+        c.execute(
+            f"SELECT request_count FROM daily_request_limits WHERE ip_address = ? AND request_date = {today}",
+            (ip_address,),
+        )
+
+    result = c.fetchone()
+    current_count = result[0] if result else 0
+
+    # Günlük limit: 2
+    can_request = current_count < 2
+
+    return can_request, current_count
+
+
+def update_daily_request_count(conn, user_id=None, ip_address=None):
+    """
+    Günlük yardım talebi sayısını günceller
+    """
+    c = conn.cursor()
+    today = "DATE('now')"
+
+    if user_id:
+        # Giriş yapmış kullanıcı
+        c.execute(
+            f"""
+            INSERT INTO daily_request_limits (user_id, request_date, request_count)
+            VALUES (?, {today}, 1)
+            ON CONFLICT(user_id, request_date) 
+            DO UPDATE SET request_count = request_count + 1
+            """,
+            (user_id,),
+        )
+    else:
+        # Anonim kullanıcı
+        c.execute(
+            f"""
+            INSERT INTO daily_request_limits (ip_address, request_date, request_count)
+            VALUES (?, {today}, 1)
+            ON CONFLICT(ip_address, request_date) 
+            DO UPDATE SET request_count = request_count + 1
+            """,
+            (ip_address,),
+        )
 
 
 # --- Routes ---
 @app.route("/")
 def index():
     return render_template("index.html")
+
+
+@app.route("/about")
+def about():
+    return render_template("about.html")
 
 
 @app.route("/help", methods=["GET", "POST"])
@@ -179,6 +290,27 @@ def help_request():
         # Veri tabanından disaster türlerini çekme
         conn = get_db()
         c = conn.cursor()
+
+        # Günlük limit kontrolü
+        user_id = session.get("user_id")
+        ip_address = request.remote_addr
+
+        can_request, current_count = check_daily_request_limit(
+            conn, user_id, ip_address
+        )
+
+        # İkinci talep uyarısı (1 talep yapılmışsa)
+        show_second_request_warning = current_count == 1
+        
+        if not can_request:
+            flash(
+                "Günlük yardım talebi sınırınıza ulaştınız. Günde en fazla 2 yardım talebi gönderebilirsiniz. Gerçek acil durumlar için lütfen 112'yi arayın.",
+                "error",
+            )
+            return render_template(
+                "help.html", form=None, disaster_types=[], daily_limit_reached=True
+            )
+
         c.execute("SELECT id, name FROM disaster_types")
         disaster_types = c.fetchall()
 
@@ -288,6 +420,9 @@ def help_request():
                     )
                     print("Help request created successfully")
 
+                    # Günlük limit sayacını güncelle
+                    update_daily_request_count(conn, user_id, ip_address)
+
                     conn.commit()
 
                     # Afet türünün adını al
@@ -335,7 +470,7 @@ def help_request():
                         "error",
                     )
                     return render_template(
-                        "help.html", form=form, disaster_types=disaster_types
+                        "help.html", form=form, disaster_types=disaster_types, show_second_request_warning=show_second_request_warning
                     )
             else:
                 print("Form validation failed:", form.errors)
@@ -351,7 +486,7 @@ def help_request():
                         400,
                     )
 
-        return render_template("help.html", form=form, disaster_types=disaster_types)
+        return render_template("help.html", form=form, disaster_types=disaster_types, show_second_request_warning=show_second_request_warning)
     except Exception as e:
         print(f"Unexpected error in help_request: {str(e)}")
         if request.headers.get("Accept") == "application/json":
@@ -368,6 +503,12 @@ def help_request():
     finally:
         if conn is not None:
             close_db(conn)
+
+
+@app.route("/help_sended/<disaster_name>")
+def help_sended(disaster_name):
+    """Yardım talebi gönderildi sayfası"""
+    return render_template("help_sended.html", data=disaster_name)
 
 
 @app.route("/sign_up", methods=["GET", "POST"])
@@ -568,10 +709,10 @@ def volunteer_panel():
 
             conn.commit()
 
-    # Get volunteer's location first
+    # Get volunteer's location first with updated_at timestamp
     c.execute(
         """
-        SELECT l.latitude, l.longitude
+        SELECT l.latitude, l.longitude, l.updated_at
         FROM volunteer_details vd
         LEFT JOIN locations l ON vd.location_id = l.id
         WHERE vd.user_id = ?
@@ -580,6 +721,7 @@ def volunteer_panel():
     )
     volunteer_location = c.fetchone()
 
+    # Check if location exists and is valid
     if (
         not volunteer_location
         or volunteer_location[0] is None
@@ -587,9 +729,56 @@ def volunteer_panel():
     ):
         flash("Lütfen önce konum bilgilerinizi güncelleyin.", "warning")
         conn.close()
-        return redirect(url_for("profile"))
+        return render_template(
+            "volunteer_panel.html",
+            pending_requests=[],
+            accepted_requests=[],
+            volunteer_location={"latitude": None, "longitude": None},
+            has_valid_location=False,
+        )
 
-    volunteer_lat, volunteer_lon = volunteer_location
+    # Check location freshness (6 hours = 21600 seconds)
+    import datetime
+
+    if volunteer_location[2]:  # updated_at exists
+        updated_at = datetime.datetime.strptime(
+            volunteer_location[2], "%Y-%m-%d %H:%M:%S"
+        )
+        time_diff = datetime.datetime.now() - updated_at
+        if time_diff.total_seconds() > 21600:  # 6 hours
+            flash(
+                "Konum bilginiz 6 saatten eski. Lütfen konumunuzu güncelleyin.",
+                "warning",
+            )
+            conn.close()
+            return render_template(
+                "volunteer_panel.html",
+                pending_requests=[],
+                accepted_requests=[],
+                volunteer_location={
+                    "latitude": volunteer_location[0],
+                    "longitude": volunteer_location[1],
+                },
+                has_valid_location=False,
+                location_outdated=True,
+            )
+
+    if not volunteer_location[2]:  # No updated_at timestamp
+        flash("Konum bilginiz güncel değil. Lütfen konumunuzu güncelleyin.", "warning")
+        conn.close()
+        return render_template(
+            "volunteer_panel.html",
+            pending_requests=[],
+            accepted_requests=[],
+            volunteer_location={
+                "latitude": volunteer_location[0],
+                "longitude": volunteer_location[1],
+            },
+            has_valid_location=False,
+            location_outdated=True,
+        )
+
+    volunteer_lat, volunteer_lon = volunteer_location[0], volunteer_location[1]
 
     # Get pending requests within 50km radius
     c.execute(
@@ -621,7 +810,7 @@ def volunteer_panel():
             req_dict = dict(req)
             req_dict["distance"] = round(distance, 1)
             pending_requests.append(req_dict)
-    
+
     # Sort by distance (closest first)
     pending_requests.sort(key=lambda x: x["distance"])
 
@@ -652,6 +841,7 @@ def volunteer_panel():
         pending_requests=pending_requests,
         accepted_requests=accepted_requests,
         volunteer_location={"latitude": volunteer_lat, "longitude": volunteer_lon},
+        has_valid_location=True,
     )
 
 
@@ -810,9 +1000,19 @@ def requester_panel():
                l.latitude, l.longitude,
                (SELECT COUNT(*) FROM assignments a WHERE a.request_id = hr.id) as volunteer_count
         FROM help_requests hr
-        JOIN disasters d ON d.location_id = hr.location_id
-        JOIN disaster_types dt ON d.disaster_type_id = dt.id
         JOIN locations l ON hr.location_id = l.id
+        LEFT JOIN (
+            SELECT d1.location_id, dt1.name, d1.started_at
+            FROM disasters d1
+            JOIN disaster_types dt1 ON d1.disaster_type_id = dt1.id
+            WHERE d1.id = (
+                SELECT d2.id FROM disasters d2 
+                WHERE d2.location_id = d1.location_id 
+                ORDER BY d2.started_at DESC 
+                LIMIT 1
+            )
+        ) latest_disaster ON latest_disaster.location_id = hr.location_id
+        LEFT JOIN disaster_types dt ON dt.name = latest_disaster.name
         WHERE hr.requester_id = ?
         ORDER BY hr.created_at DESC
     """,
@@ -925,11 +1125,11 @@ def insert_initial_data():
     if not c.fetchone():
         c.execute(
             """
-            INSERT OR IGNORE INTO users (fullname, username, email, password_hash, role_id)
-            SELECT 'Test Admin', 'admin', 'admin@test.com', ?, r.id 
+            INSERT OR IGNORE INTO users (fullname, username, email, password_hash, role_id, last_login)
+            SELECT 'Test Admin', 'admin', 'admin@test.com', ?, r.id, ? 
             FROM roles r WHERE r.name = 'admin'
             """,
-            (generate_password_hash("test123"),),
+            (generate_password_hash("test123"), random.choice(LAST_LOGIN_DATES)),
         )
 
     # 5. Create test coordinator account
@@ -937,11 +1137,11 @@ def insert_initial_data():
     if not c.fetchone():
         c.execute(
             """
-            INSERT OR IGNORE INTO users (fullname, username, email, phone, password_hash, role_id)
-            SELECT 'Mehmet Özkan', 'coordinator', 'mehmet.ozkan@afetkoord.org', '05321234567', ?, r.id
+            INSERT OR IGNORE INTO users (fullname, username, email, phone, password_hash, role_id, last_login)
+            SELECT 'Mehmet Özkan', 'coordinator', 'mehmet.ozkan@afetkoord.org', '05321234567', ?, r.id, ?
             FROM roles r WHERE r.name = 'coordinator'
             """,
-            (generate_password_hash("test123"),),
+            (generate_password_hash("test123"), random.choice(LAST_LOGIN_DATES)),
         )
 
     # 6. Create test volunteers with different locations
@@ -1032,10 +1232,17 @@ def insert_initial_data():
         if not c.fetchone():
             c.execute(
                 """
-                INSERT OR IGNORE INTO users (fullname, username, email, phone, password_hash, role_id)
-                SELECT ?, ?, ?, ?, ?, r.id FROM roles r WHERE r.name = 'volunteer'
+                INSERT OR IGNORE INTO users (fullname, username, email, phone, password_hash, role_id, last_login)
+                SELECT ?, ?, ?, ?, ?, r.id, ? FROM roles r WHERE r.name = 'volunteer'
                 """,
-                (fullname, username, email, phone, generate_password_hash("test123")),
+                (
+                    fullname,
+                    username,
+                    email,
+                    phone,
+                    generate_password_hash("test123"),
+                    random.choice(LAST_LOGIN_DATES),
+                ),
             )
             c.execute("SELECT id FROM users WHERE email = ?", (email,))
             user_id = c.fetchone()[0]
@@ -1093,10 +1300,17 @@ def insert_initial_data():
         if not c.fetchone():
             c.execute(
                 """
-                INSERT OR IGNORE INTO users (fullname, username, email, phone, password_hash, role_id)
-                SELECT ?, ?, ?, ?, ?, r.id FROM roles r WHERE r.name = 'requester'
+                INSERT OR IGNORE INTO users (fullname, username, email, phone, password_hash, role_id, last_login)
+                SELECT ?, ?, ?, ?, ?, r.id, ? FROM roles r WHERE r.name = 'requester'
                 """,
-                (fullname, username, email, phone, generate_password_hash("test123")),
+                (
+                    fullname,
+                    username,
+                    email,
+                    phone,
+                    generate_password_hash("test123"),
+                    random.choice(LAST_LOGIN_DATES),
+                ),
             )
             c.execute("SELECT id FROM users WHERE email = ?", (email,))
             user_id = c.fetchone()[0]
@@ -1118,27 +1332,14 @@ def insert_initial_data():
     )
     requester_ids = [row[0] for row in c.fetchall()]
 
-    import random
-
-    # Gerçekçi yardım talepleri
-    realistic_requests = [
-        "Deprem sonrası evimiz kullanılamaz halde. Acil barınma yeri ihtiyacımız var.",
-        "Sel sularına kapılan eşyalarımızı kaybettik. Giyecek ve battaniye ihtiyacımız var.",
-        "Yaşlı annem için ilaç temin etmemiz gerekiyor. Eczaneler kapalı.",
-        "Çocuklarım için bebek maması ve bez ihtiyacımız var acil olarak.",
-        "Evimizin çatısı yangında zarar gördü. Geçici onarım yapılması gerekiyor.",
-        "Su ve gıda sıkıntımız var. Temel ihtiyaç malzemelerine ihtiyacımız var.",
-        "Depremden sonra psikolojik destek ihtiyacımız var. Çocuklarım çok korkuyor.",
-        "Evimizin elektrik tesisatı hasarlı. Elektrikçi yardımına ihtiyacımız var.",
-        "Yaralı komşumuz var, hastaneye ulaştırılması gerekiyor.",
-        "Enkaz altında kalan eşyalarımızı çıkarabilmek için yardıma ihtiyacımız var.",
-    ]
-
-    for i in range(10):
+    # Rastgele yardım talepleri için global listeden seç
+    for i in range(15):  # 15 yardım talebi oluştur
         requester_id = random.choice(requester_ids)
         disaster_type_id = random.choice(disaster_type_ids)
         location_id = random.choice(location_ids)
-        additional_info = realistic_requests[i]
+        additional_info = random.choice(
+            REALISTIC_REQUESTS
+        )  # Global listeden rastgele seç
 
         # Disaster kaydı
         c.execute(
@@ -1228,20 +1429,8 @@ def profile():
     c.execute("SELECT * FROM users WHERE id = ?", (session["user_id"],))
     user = c.fetchone()
 
-    # Kullanıcının yardım taleplerini al
-    c.execute(
-        """
-        SELECT hr.*, dt.name as disaster_type, l.latitude, l.longitude
-        FROM help_requests hr
-        LEFT JOIN disasters d ON d.location_id = hr.location_id
-        LEFT JOIN disaster_types dt ON d.disaster_type_id = dt.id
-        LEFT JOIN locations l ON hr.location_id = l.id
-        WHERE hr.requester_id = ?
-        ORDER BY hr.created_at DESC
-    """,
-        (session["user_id"],),
-    )
-    help_requests = c.fetchall()
+    # Profile sayfasında help_requests'i kaldırıyoruz - requester panel'da zaten mevcut
+    help_requests = []
 
     # Gönüllü ise katıldığı yardımları al
     if session["role"] == "volunteer":
@@ -1259,6 +1448,18 @@ def profile():
             (session["user_id"],),
         )
         volunteer_help_requests = c.fetchall()
+
+        # Gönüllünün konum bilgilerini al
+        c.execute(
+            """
+            SELECT l.latitude, l.longitude, l.updated_at, l.created_at
+            FROM volunteer_details vd
+            LEFT JOIN locations l ON vd.location_id = l.id
+            WHERE vd.user_id = ?
+            """,
+            (session["user_id"],),
+        )
+        volunteer_location = c.fetchone()
 
         # Koordinatör başvuru durumunu kontrol et
         c.execute(
@@ -1279,6 +1480,7 @@ def profile():
         )
     else:
         volunteer_help_requests = []
+        volunteer_location = None
         coordinator_request_status = None
         coordinator_request_reason = None
 
@@ -1289,131 +1491,7 @@ def profile():
         user=user,
         help_requests=help_requests,
         volunteer_help_requests=volunteer_help_requests,
-        coordinator_request_status=coordinator_request_status,
-        coordinator_request_reason=coordinator_request_reason,
-    )
-    if not session.get("user_id"):
-        return redirect(url_for("sign_in"))
-
-    conn = get_db()
-    c = conn.cursor()
-
-    if request.method == "POST":
-        action = request.form.get("action")
-
-        if action == "request_coordinator":
-            # Koordinatör olma isteği gönderme
-            if session.get("role") != "volunteer":
-                flash(
-                    "Sadece gönüllüler koordinatör olma isteği gönderebilir.", "error"
-                )
-                return redirect(url_for("profile"))
-
-            request_reason = request.form.get("request_reason", "").strip()
-
-            if not request_reason:
-                flash("Lütfen koordinatör olmak isteme nedeninizi belirtin.", "error")
-                return redirect(url_for("profile"))
-
-            # Daha önce beklemede olan bir istek var mı kontrol et
-            c.execute(
-                "SELECT id FROM coordinator_requests WHERE user_id = ? AND status = 'pending'",
-                (session["user_id"],),
-            )
-            existing_request = c.fetchone()
-
-            if existing_request:
-                flash(
-                    "Zaten beklemede olan bir koordinatör başvurunuz bulunmaktadır.",
-                    "warning",
-                )
-                return redirect(url_for("profile"))
-
-            # Yeni istek oluştur
-            try:
-                c.execute(
-                    """
-                    INSERT INTO coordinator_requests (user_id, request_reason, status)
-                    VALUES (?, ?, 'pending')
-                    """,
-                    (session["user_id"], request_reason),
-                )
-                conn.commit()
-                flash(
-                    "Koordinatör başvurunuz başarıyla gönderildi. İnceleme sürecinde bilgilendirileceksiniz.",
-                    "success",
-                )
-            except sqlite3.Error as e:
-                conn.rollback()
-                flash("Başvuru gönderilirken bir hata oluştu.", "error")
-
-            return redirect(url_for("profile"))
-
-    # Kullanıcı bilgilerini al
-    c.execute("SELECT * FROM users WHERE id = ?", (session["user_id"],))
-    user = c.fetchone()
-
-    # Kullanıcının yardım taleplerini al
-    c.execute(
-        """
-        SELECT hr.*, dt.name as disaster_type, l.latitude, l.longitude
-        FROM help_requests hr
-        LEFT JOIN disasters d ON d.location_id = hr.location_id
-        LEFT JOIN disaster_types dt ON d.disaster_type_id = dt.id
-        LEFT JOIN locations l ON hr.location_id = l.id
-        WHERE hr.requester_id = ?
-        ORDER BY hr.created_at DESC
-    """,
-        (session["user_id"],),
-    )
-    help_requests = c.fetchall()
-
-    # Gönüllü ise katıldığı yardımları al
-    if session["role"] == "volunteer":
-        c.execute(
-            """
-            SELECT hr.*, dt.name as disaster_type, l.latitude, l.longitude
-            FROM help_requests hr
-            JOIN assignments a ON hr.id = a.request_id
-            JOIN disasters d ON d.location_id = hr.location_id
-            JOIN disaster_types dt ON d.disaster_type_id = dt.id
-            JOIN locations l ON hr.location_id = l.id
-            WHERE a.volunteer_id = ?
-            ORDER BY hr.created_at DESC
-        """,
-            (session["user_id"],),
-        )
-        volunteer_help_requests = c.fetchall()
-
-        # Koordinatör başvuru durumunu kontrol et
-        c.execute(
-            """
-            SELECT status, request_reason FROM coordinator_requests 
-            WHERE user_id = ? 
-            ORDER BY created_at DESC 
-            LIMIT 1
-            """,
-            (session["user_id"],),
-        )
-        coordinator_request = c.fetchone()
-        coordinator_request_status = (
-            coordinator_request[0] if coordinator_request else None
-        )
-        coordinator_request_reason = (
-            coordinator_request[1] if coordinator_request else None
-        )
-    else:
-        volunteer_help_requests = []
-        coordinator_request_status = None
-        coordinator_request_reason = None
-
-    conn.close()
-
-    return render_template(
-        "profile.html",
-        user=user,
-        help_requests=help_requests,
-        volunteer_help_requests=volunteer_help_requests,
+        volunteer_location=volunteer_location,
         coordinator_request_status=coordinator_request_status,
         coordinator_request_reason=coordinator_request_reason,
     )
@@ -1825,6 +1903,75 @@ def admin_panel():
     )
 
 
+@app.route("/update-volunteer-location", methods=["POST"])
+def update_volunteer_location():
+    if session.get("role") != "volunteer":
+        return jsonify({"success": False, "message": "Yetkisiz erişim"}), 403
+
+    try:
+        data = request.get_json()
+        latitude = data.get("latitude")
+        longitude = data.get("longitude")
+
+        if not latitude or not longitude:
+            return (
+                jsonify({"success": False, "message": "Koordinat bilgileri eksik"}),
+                400,
+            )
+
+        conn = get_db()
+        c = conn.cursor()
+
+        # Gönüllünün mevcut location_id'sini al
+        c.execute(
+            """
+            SELECT location_id FROM volunteer_details WHERE user_id = ?
+            """,
+            (session["user_id"],),
+        )
+        result = c.fetchone()
+
+        if result and result[0]:
+            # Mevcut konumu güncelle
+            location_id = result[0]
+            c.execute(
+                """
+                UPDATE locations 
+                SET latitude = ?, longitude = ?, updated_at = CURRENT_TIMESTAMP 
+                WHERE id = ?
+                """,
+                (latitude, longitude, location_id),
+            )
+        else:
+            # Yeni konum oluştur
+            c.execute(
+                """
+                INSERT INTO locations (latitude, longitude, province_id, district_id, neighborhood_id)
+                VALUES (?, ?, NULL, NULL, NULL)
+                """,
+                (latitude, longitude),
+            )
+            location_id = c.lastrowid
+
+            # volunteer_details tablosunu güncelle veya oluştur
+            c.execute(
+                """
+                INSERT OR REPLACE INTO volunteer_details (user_id, location_id)
+                VALUES (?, ?)
+                """,
+                (session["user_id"], location_id),
+            )
+
+        conn.commit()
+        conn.close()
+
+        return jsonify({"success": True, "message": "Konum başarıyla güncellendi"})
+
+    except Exception as e:
+        print(f"Konum güncelleme hatası: {e}")
+        return jsonify({"success": False, "message": "Sunucu hatası"}), 500
+
+
 if __name__ == "__main__":
     if not os.path.exists(DB_PATH):
         print("Initializing database...")
@@ -1838,7 +1985,7 @@ if __name__ == "__main__":
 
 # --- Templates (templates/ folder) ---
 # index.html, help.html, help_sended.html,
-# sign_up.html, sign_in.html, 
-# profile.html, edit_profile.html, 
+# sign_up.html, sign_in.html,
+# profile.html, edit_profile.html,
 # requester_panel.html, volunteer_panel.html, coordinator_panel.html,
-# admin_panel.html, 
+# admin_panel.html,
